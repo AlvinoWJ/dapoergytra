@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import Button from "@/components/ui/button";
 import InputField from "@/components/ui/inputfield";
-import Alert from "@/components/ui/alert";
 import Image from "next/image";
+import { useToast } from "@/components/toast/toastprovider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { show } = useToast();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,13 +30,18 @@ export default function LoginPage() {
     try {
       const res = await api.post("/login", { email, password });
       const token = res.data?.token;
-      if (token) localStorage.setItem("token", token);
-      router.push("/dashboard");
+
+      if (token) {
+        localStorage.setItem("token", token);
+        show("Login berhasil! Selamat datang kembali.", "success");
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Login gagal. Periksa email dan password Anda.";
       setError(message);
+      show(message, "error");
     } finally {
       setLoading(false);
     }
@@ -69,8 +75,6 @@ export default function LoginPage() {
                 Masuk
               </p>
             </div>
-
-            {error && <Alert message={error} className="mb-6" />}
 
             <div className="flex flex-col gap-5">
               <InputField
@@ -112,13 +116,11 @@ export default function LoginPage() {
                 Masuk
               </Button>
             </div>
-
             <div className="my-6 flex items-center gap-3">
               <span className="h-px flex-1 bg-slate-200" />
               <span className="text-xs text-slate-400">atau</span>
               <span className="h-px flex-1 bg-slate-200" />
             </div>
-
             <p className="text-center text-sm text-slate-500">
               Belum punya akun?{" "}
               <Link
