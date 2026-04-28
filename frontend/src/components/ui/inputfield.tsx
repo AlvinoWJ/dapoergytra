@@ -39,6 +39,7 @@ const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
           <input
             ref={ref}
             id={inputId}
+            type={inputtype}
             className={[
               "w-full rounded-xl border bg-slate-50 px-4 py-3 text-base text-slate-800 placeholder-slate-300 outline-none transition-all duration-150",
               "focus:border-red-400 focus:bg-white focus:ring-1 focus:ring-red-200",
@@ -56,7 +57,7 @@ const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showpassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 hover:text-slate-600 transition-colors"
               tabIndex={-1}
             >
               {showpassword ? (
@@ -68,7 +69,6 @@ const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
           )}
         </div>
 
-        {/* Error or hint */}
         {error ? (
           <p className="text-xs text-red-500">{error}</p>
         ) : hint ? (
