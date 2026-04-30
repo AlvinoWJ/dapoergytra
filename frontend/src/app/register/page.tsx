@@ -10,14 +10,14 @@ import { useToast } from "@/components/toast/toastprovider";
 import Image from "next/image";
 
 interface FormFields {
-  name: string;
+  username: string;
   email: string;
   password: string;
   passwordConfirm: string;
 }
 
 interface FormErrors {
-  name?: string;
+  username?: string;
   email?: string;
   password?: string;
   passwordConfirm?: string;
@@ -26,10 +26,10 @@ interface FormErrors {
 function validate(fields: FormFields): FormErrors {
   const errors: FormErrors = {};
 
-  if (!fields.name.trim()) {
-    errors.name = "Nama wajib diisi.";
-  } else if (fields.name.trim().length < 2) {
-    errors.name = "Nama minimal 2 karakter.";
+  if (!fields.username.trim()) {
+    errors.username = "Username wajib diisi.";
+  } else if (fields.username.trim().length < 2) {
+    errors.username = "Username minimal 2 karakter.";
   }
 
   if (!fields.email.trim()) {
@@ -61,13 +61,29 @@ function getPasswordStrength(password: string): {
   if (!password) return { level: 0, label: "", color: "" };
 
   let score = 0;
-  if (password.length >= 8) score++;
-  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
-  if (/\d/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
+  const hasMinLength = password.length >= 8;
+  const hasUpperLower = /[A-Z]/.test(password) && /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
 
-  if (score <= 1) return { level: 1, label: "Lemah", color: "bg-red-400" };
-  if (score === 2) return { level: 2, label: "Sedang", color: "bg-amber-400" };
+  // Perhitungan Score
+  if (hasMinLength) score++;
+  if (hasUpperLower) score++;
+  if (hasNumber) score++;
+  if (hasSpecial) score++;
+
+  // Logika Penentuan Level dengan Syarat Mutlak
+  // 1. Jika panjang kurang dari 8, maksimal hanya "Sedang" (Level 2)
+  //    walaupun pakai simbol/angka.
+  if (!hasMinLength) {
+    if (score >= 2) return { level: 2, label: "Sedang", color: "bg-amber-400" };
+    return { level: 1, label: "Lemah", color: "bg-red-400" };
+  }
+
+  // 2. Jika panjang sudah >= 8, baru kita cek skor totalnya
+  if (score <= 2) return { level: 2, label: "Sedang", color: "bg-amber-400" };
+
+  // Level 3 (Kuat) hanya jika panjang cukup DAN skor minimal 3 (misal: panjang + huruf + angka)
   return { level: 3, label: "Kuat", color: "bg-emerald-500" };
 }
 
@@ -76,7 +92,7 @@ export default function RegisterPage() {
   const { show } = useToast();
 
   const [fields, setFields] = useState<FormFields>({
-    name: "",
+    username: "",
     email: "",
     password: "",
     passwordConfirm: "",
@@ -103,8 +119,8 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      await api.post("/register", {
-        name: fields.name,
+      await api.post("/auth/register", {
+        username: fields.username,
         email: fields.email,
         password: fields.password,
         password_confirmation: fields.passwordConfirm,
@@ -123,7 +139,8 @@ export default function RegisterPage() {
       // Handle Laravel validation errors (422)
       if (data?.errors) {
         const serverErrors: FormErrors = {};
-        if (data.errors.name) serverErrors.name = data.errors.name[0];
+        if (data.errors.username)
+          serverErrors.username = data.errors.username[0];
         if (data.errors.email) serverErrors.email = data.errors.email[0];
         if (data.errors.password)
           serverErrors.password = data.errors.password[0];
@@ -190,16 +207,16 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex flex-col gap-5">
-              {/* Nama */}
+              {/* username */}
               <InputField
-                label="Nama Lengkap"
+                label="Username"
                 type="text"
                 placeholder="John Doe"
-                value={fields.name}
-                onChange={handleChange("name")}
+                value={fields.username}
+                onChange={handleChange("username")}
                 onKeyDown={handleKeyDown}
-                error={errors.name}
-                autoComplete="name"
+                error={errors.username}
+                autoComplete="username"
                 autoFocus
               />
 
