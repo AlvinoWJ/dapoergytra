@@ -24,6 +24,7 @@ const sizeStyles: Record<Size, string> = {
 };
 
 export default function Button({
+  type = "button",
   variant = "primary",
   size = "md",
   loading = false,
@@ -35,6 +36,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button
+      type={type}
       disabled={disabled || loading}
       className={[
         "inline-flex items-center justify-center gap-2 rounded-xl font-semibold tracking-wide transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2",

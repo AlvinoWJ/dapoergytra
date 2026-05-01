@@ -11,9 +11,9 @@ interface User {
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    api.get("/user").then((res) => setUser(res.data));
-  }, []);
+  // useEffect(() => {
+  //   api.get("/user").then((res) => setUser(res.data));
+  // }, []);
 
   return <div>Hello, {user?.name}</div>;
 }

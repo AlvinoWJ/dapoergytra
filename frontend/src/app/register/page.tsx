@@ -66,24 +66,17 @@ function getPasswordStrength(password: string): {
   const hasNumber = /\d/.test(password);
   const hasSpecial = /[^A-Za-z0-9]/.test(password);
 
-  // Perhitungan Score
   if (hasMinLength) score++;
   if (hasUpperLower) score++;
   if (hasNumber) score++;
   if (hasSpecial) score++;
 
-  // Logika Penentuan Level dengan Syarat Mutlak
-  // 1. Jika panjang kurang dari 8, maksimal hanya "Sedang" (Level 2)
-  //    walaupun pakai simbol/angka.
   if (!hasMinLength) {
     if (score >= 2) return { level: 2, label: "Sedang", color: "bg-amber-400" };
     return { level: 1, label: "Lemah", color: "bg-red-400" };
   }
 
-  // 2. Jika panjang sudah >= 8, baru kita cek skor totalnya
   if (score <= 2) return { level: 2, label: "Sedang", color: "bg-amber-400" };
-
-  // Level 3 (Kuat) hanya jika panjang cukup DAN skor minimal 3 (misal: panjang + huruf + angka)
   return { level: 3, label: "Kuat", color: "bg-emerald-500" };
 }
 
@@ -105,7 +98,6 @@ export default function RegisterPage() {
   const handleChange =
     (key: keyof FormFields) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setFields((prev) => ({ ...prev, [key]: e.target.value }));
-      // Clear error saat user mulai mengetik
       if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
     };
 
@@ -136,7 +128,6 @@ export default function RegisterPage() {
         }
       )?.response?.data;
 
-      // Handle Laravel validation errors (422)
       if (data?.errors) {
         const serverErrors: FormErrors = {};
         if (data.errors.username)
@@ -160,7 +151,6 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* ── LEFT PANEL ── */}
       <aside className="relative hidden w-[45%] flex-col justify-between overflow-hidden bg-slate-900 p-12 lg:flex">
         <Image
           src="/login.png"
@@ -244,8 +234,6 @@ export default function RegisterPage() {
                   error={errors.password}
                   autoComplete="new-password"
                 />
-
-                {/* Password strength bar */}
 
                 {fields.password && (
                   <div className="flex items-center gap-2 pt-0.5">
