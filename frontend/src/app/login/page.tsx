@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
-import Button from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import InputField from "@/components/ui/inputfield";
 import Image from "next/image";
 import { useToast } from "@/components/toast/toastprovider";

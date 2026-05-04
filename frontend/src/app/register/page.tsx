@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
-import Button from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import InputField from "@/components/ui/inputfield";
 import { useToast } from "@/components/toast/toastprovider";
 import Image from "next/image";
@@ -283,7 +283,7 @@ export default function RegisterPage() {
                 size="lg"
                 loading={loading}
                 onClick={handleSubmit}
-                className="mt-1 bg-indigo-600 hover:bg-indigo-700 focus-visible:ring-indigo-400"
+                className="mt-1"
               >
                 Buat Akun
               </Button>
