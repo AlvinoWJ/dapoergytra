@@ -21,6 +21,13 @@ export function Navbar({
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const menuItems = [
+    { label: "Beranda", id: "home" },
+    { label: "Produk Terbaik", id: "best-products" },
+    { label: "Katalog", id: "catalog" },
+    { label: "Profil", id: "about" },
+  ];
+
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -33,22 +40,20 @@ export function Navbar({
     <nav className="sticky top-0 z-50 bg-white border-b shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {" "}
-          {/* Tinggi sedikit ditambah agar elegan */}
-          {/* Logo - Bold dan Merah Sesuai Gambar */}
           <div className="flex-shrink-0 cursor-pointer">
             <h1 className="font-extrabold text-2xl text-red-600 tracking-tight">
               dapoergytra
             </h1>
           </div>
-          {/* Desktop Navigation - Warna Hitam & Jarak Lebih Lebar */}
+
           <div className="hidden md:flex items-center gap-10">
-            {["Beranda", "Produk Terbaik", "Katalog", "Profil"].map((item) => (
+            {menuItems.map((item) => (
               <button
-                key={item}
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
                 className="text-sm font-medium text-gray-800 hover:text-red-600 transition-colors"
               >
-                {item}
+                {item.label}
               </button>
             ))}
           </div>

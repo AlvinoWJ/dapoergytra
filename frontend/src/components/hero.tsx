@@ -10,8 +10,8 @@ export function Hero() {
 
   const [imgSrc, setImgSrc] = useState(mainImage);
 
-  const scrollToCatalog = () => {
-    const element = document.getElementById("catalog");
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
     }
@@ -37,18 +37,14 @@ export function Hero() {
             </p>
             <div className="flex gap-4">
               <Button
-                onClick={scrollToCatalog}
+                onClick={() => scrollToSection("catalog")}
                 size="lg"
                 className="bg-red-600 hover:bg-red-700"
               >
                 Lihat Katalog
               </Button>
               <Button
-                onClick={() =>
-                  document
-                    .getElementById("about")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
+                onClick={() => scrollToSection("about")}
                 variant="outline"
                 size="lg"
               >
@@ -66,7 +62,7 @@ export function Hero() {
                 fill
                 priority
                 // sizes="(max-width: 768px) 100vw, 50vw"
-                className="w-full h-full object-cover rounded-2xl shadow-2xl overflow-hidden aspect-square"
+                className="w-full h-full object-cover rounded-2xl shadow-2xl overflow-hidden"
                 onError={() => setImgSrc(fallbackImage)}
               />
             </div>

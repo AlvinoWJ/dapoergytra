@@ -6,6 +6,8 @@ import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
 import { Hero } from "@/components/hero";
 import { ProductCatalog } from "@/components/product_catalog";
+import { About } from "@/components/about";
+import { BestProducts } from "@/components/best_product";
 // import { ProductCard } from "@/components/ProductCard"; // Asumsi dipisah ke komponen sendiri
 // import { CartDrawer } from "@/components/CartDrawer";
 // import { LoginModal } from "@/components/LoginModal";
@@ -90,13 +92,11 @@ export default function HomePage() {
         userName={user?.name || "User"}
         onLogout={handleLogout}
       />
-      <main>
-        {/* ── HERO SECTION ── */}
-        <Hero />
 
-        {/* ── KATALOG SECTION ── */}
-        <ProductCatalog onAddToCart={handleAddToCart} />
-      </main>
+      <Hero />
+      <BestProducts onAddToCart={handleAddToCart} />
+      <ProductCatalog onAddToCart={handleAddToCart} />
+      <About />
 
       <Footer />
       {/* ── OVERLAYS ── */}

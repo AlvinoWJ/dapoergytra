@@ -182,11 +182,6 @@ export function ProductCatalog({ onAddToCart }: ProductCatalogProps) {
                       fill
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                     />
-                    {/* <ImageWithFallback
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    /> */}
                   </div>
                   <CardContent className="p-4">
                     <Badge variant="secondary" className="mb-2 text-xs">
