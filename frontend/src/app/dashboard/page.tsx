@@ -10,13 +10,16 @@ import { About } from "@/components/about";
 import { BestProducts } from "@/components/best_product";
 // import { ProductCard } from "@/components/ProductCard"; // Asumsi dipisah ke komponen sendiri
 // import { CartDrawer } from "@/components/CartDrawer";
-// import { LoginModal } from "@/components/LoginModal";
 
-// Interface dasar untuk sinkronisasi dengan Laravel
 interface User {
   id: number;
   name: string;
   email: string;
+}
+
+export interface Kategori {
+  id: number;
+  nama_kategori: string;
 }
 
 interface Product {
