@@ -7,7 +7,7 @@ import { Badge } from "./ui/badge";
 interface Product {
   id: number;
   nama: string;
-  price: number;
+  harga: number;
   foto: string;
   rating: number;
   sold: number;
@@ -17,7 +17,7 @@ const bestProducts: Product[] = [
   {
     id: 1,
     nama: "Brownies Coklat Premium",
-    price: 75000,
+    harga: 75000,
     foto: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=400&fit=crop",
     rating: 4.9,
     sold: 523,
@@ -25,7 +25,7 @@ const bestProducts: Product[] = [
   {
     id: 2,
     nama: "Kue Lapis Legit",
-    price: 120000,
+    harga: 120000,
     foto: "https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=400&h=400&fit=crop",
     rating: 4.8,
     sold: 412,
@@ -33,7 +33,7 @@ const bestProducts: Product[] = [
   {
     id: 3,
     nama: "Red Velvet Cake",
-    price: 95000,
+    harga: 95000,
     foto: "https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=400&h=400&fit=crop",
     rating: 4.9,
     sold: 389,
@@ -90,7 +90,7 @@ export function BestProducts({
                 </p>
                 <div className="flex justify-between items-center">
                   <span className="text-xl font-bold text-red-700">
-                    Rp {product.price.toLocaleString("id-ID")}
+                    Rp {product.harga.toLocaleString("id-ID")}
                   </span>
                   <Button
                     onClick={(e) => {

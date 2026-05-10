@@ -7,10 +7,10 @@ import Image from "next/image";
 
 export interface Kategori {
   id: number;
-  nama_kategori: string;
+  nama: string;
 }
 
-export interface Produk {
+interface Produk {
   id: number;
   nama: string;
   harga: number;
@@ -154,7 +154,7 @@ export function ProductCatalog({
                     </div>
                     <CardContent className="p-4">
                       <Badge variant="secondary" className="mb-2 text-xs">
-                        {produk.kategori?.nama_kategori ?? produk.kategori_id}
+                        {produk.kategori?.nama}
                       </Badge>
                       <h3 className="font-semibold mb-1">{produk.nama}</h3>
                       <p className="text-sm text-gray-500 mb-3 line-clamp-2">

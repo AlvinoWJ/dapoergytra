@@ -5,41 +5,49 @@ import {
   DialogContent,
   DialogTitle,
 } from "./ui/dialog";
+import { useEffect } from "react";
 import Image from "next/image";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
+import { Kategori } from "./product_catalog";
 
-interface Product {
+interface Produk {
   id: number;
   nama: string;
-  price: number;
+  harga: number;
   foto: string;
-  kategori: string;
-  description: string;
+  kategori?: Kategori;
+  deskripsi: string;
 }
 
 interface ProductDetailModalProps {
   open: boolean;
   onClose: () => void;
-  product: Product | null;
-  onAddToCart: (product: Product, quantity: number) => void;
+  Produk: Produk | null;
+  onAddToCart: (product: Produk, quantity: number) => void;
 }
 
 export function ProductDetailModal({
   open,
   onClose,
-  product,
+  Produk,
   onAddToCart,
 }: ProductDetailModalProps) {
   const [quantity, setQuantity] = useState(1);
 
-  if (!product) return null;
+  useEffect(() => {
+    if (open) {
+      setQuantity(1);
+    }
+  }, [Produk?.id, open]);
+
+  if (!Produk) return null;
 
   const handleAddToCart = () => {
-    onAddToCart(product, quantity);
+    onAddToCart(Produk, quantity);
     setQuantity(1);
     onClose();
   };
@@ -55,8 +63,8 @@ export function ProductDetailModal({
           {/* Image */}
           <div className="aspect-square relative rounded-lg overflow-hidden">
             <Image
-              src={product.foto}
-              alt={product.nama}
+              src={Produk.foto}
+              alt={Produk.nama}
               fill
               className="w-full h-full object-cover"
             />
@@ -66,11 +74,11 @@ export function ProductDetailModal({
           <div className="space-y-4">
             <div>
               <Badge variant="secondary" className="mb-2">
-                {product.kategori}
+                {Produk.kategori?.nama}
               </Badge>
-              <h2 className="text-2xl font-bold mb-2">{product.nama}</h2>
+              <h2 className="text-2xl font-bold mb-2">{Produk.nama}</h2>
               <p className="text-3xl font-bold text-red-700">
-                Rp {product.price.toLocaleString("id-ID")}
+                Rp {Produk.harga.toLocaleString("id-ID")}
               </p>
             </div>
 
@@ -78,7 +86,7 @@ export function ProductDetailModal({
 
             <div>
               <h3 className="font-semibold mb-2">Deskripsi</h3>
-              <p className="text-gray-600">{product.description}</p>
+              <p className="text-gray-600">{Produk.deskripsi}</p>
             </div>
 
             <div>
@@ -123,7 +131,7 @@ export function ProductDetailModal({
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Subtotal</span>
                 <span className="text-xl font-bold text-red-700">
-                  Rp {(product.price * quantity).toLocaleString("id-ID")}
+                  Rp {(Produk.harga * quantity).toLocaleString("id-ID")}
                 </span>
               </div>
             </div>

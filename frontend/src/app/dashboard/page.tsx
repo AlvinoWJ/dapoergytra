@@ -18,15 +18,15 @@ interface User {
 
 export interface Kategori {
   id: number;
-  nama_kategori: string;
+  nama: string;
 }
 
-interface Product {
+interface Produk {
   id: number;
-  name: string;
-  category: string;
-  price: number;
-  description: string;
+  nama: string;
+  kategori?: Kategori;
+  harga: number;
+  deskripsi: string;
   foto: string; // Mengganti emoji dengan URL gambar asli nantinnya
   rating?: number;
   reviews_count?: number;
@@ -36,14 +36,14 @@ export default function HomePage() {
   const router = useRouter();
 
   // --- UI States ---
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduk, setSelectedProduk] = useState<Produk | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("Semua");
 
   // --- Data States (Akan diisi dari API) ---
-  const [products, setProducts] = useState<Product[]>([]);
+  const [Produk, setProduk] = useState<Produk[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [cartItems, setCartItems] = useState<any[]>([]); // Sebaiknya ambil dari state management/API
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -67,7 +67,7 @@ export default function HomePage() {
   };
 
   // --- Cart Logic (Persiapan Integrasi API) ---
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: Produk) => {
     if (!isLoggedIn) {
       setLoginModalOpen(true);
       return;
@@ -78,15 +78,15 @@ export default function HomePage() {
   };
 
   const handleAddToCartWithQuantity = (
-    product: Product,
+    Produk: Produk,
     quantity: number = 1,
   ) => {
-    console.log(`Adding ${quantity} of ${product.name} to cart`);
+    console.log(`Adding ${quantity} of ${Produk.nama} to cart`);
     // Logic for API call would go here
   };
 
-  const openProductDetail = (product: Product) => {
-    setSelectedProduct(product);
+  const openProductDetail = (Produk: Produk) => {
+    setSelectedProduk(Produk);
     setDetailModalOpen(true);
   };
 
@@ -123,7 +123,7 @@ export default function HomePage() {
         onClose={() => {
           setDetailModalOpen(false);
         }}
-        product={selectedProduct}
+        Produk={selectedProduk}
         onAddToCart={handleAddToCartWithQuantity}
       />
 
