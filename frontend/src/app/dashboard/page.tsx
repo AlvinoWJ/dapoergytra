@@ -7,9 +7,8 @@ import { Navbar } from "@/components/navbar";
 import { Hero } from "@/components/hero";
 import { ProductCatalog } from "@/components/product_catalog";
 import { About } from "@/components/about";
-import { BestProducts } from "@/components/best_product";
-// import { ProductCard } from "@/components/ProductCard"; // Asumsi dipisah ke komponen sendiri
-// import { CartDrawer } from "@/components/CartDrawer";
+import { BestProducts } from "@/components/product_best";
+import { ProductDetailModal } from "@/components/product_detail";
 
 interface User {
   id: number;
@@ -28,7 +27,7 @@ interface Product {
   category: string;
   price: number;
   description: string;
-  image_url: string; // Mengganti emoji dengan URL gambar asli nantinnya
+  foto: string; // Mengganti emoji dengan URL gambar asli nantinnya
   rating?: number;
   reviews_count?: number;
 }
@@ -37,6 +36,8 @@ export default function HomePage() {
   const router = useRouter();
 
   // --- UI States ---
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("Semua");
@@ -76,11 +77,18 @@ export default function HomePage() {
     setCartOpen(true);
   };
 
-  // Filter sederhana untuk UI (nantinya bisa dilakukan via query params API)
-  const filteredProducts =
-    activeCategory === "Semua"
-      ? products
-      : products.filter((p) => p.category === activeCategory);
+  const handleAddToCartWithQuantity = (
+    product: Product,
+    quantity: number = 1,
+  ) => {
+    console.log(`Adding ${quantity} of ${product.name} to cart`);
+    // Logic for API call would go here
+  };
+
+  const openProductDetail = (product: Product) => {
+    setSelectedProduct(product);
+    setDetailModalOpen(true);
+  };
 
   const cartItemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
@@ -97,9 +105,27 @@ export default function HomePage() {
       />
 
       <Hero />
-      <BestProducts onAddToCart={handleAddToCart} />
-      <ProductCatalog onAddToCart={handleAddToCart} />
+
+      <BestProducts
+        onAddToCart={handleAddToCart}
+        onProductClick={openProductDetail}
+      />
+
+      <ProductCatalog
+        onAddToCart={handleAddToCart}
+        onProductClick={openProductDetail}
+      />
+
       <About />
+
+      <ProductDetailModal
+        open={detailModalOpen}
+        onClose={() => {
+          setDetailModalOpen(false);
+        }}
+        product={selectedProduct}
+        onAddToCart={handleAddToCartWithQuantity}
+      />
 
       <Footer />
       {/* ── OVERLAYS ── */}

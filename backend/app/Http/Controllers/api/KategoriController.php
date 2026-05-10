@@ -12,7 +12,7 @@ class KategoriController extends Controller
 {
     public function index(): JsonResponse
     {
-        $kategori = Kategori::withCount('produks')->orderBy('nama_kategori')->get();
+        $kategori = Kategori::withCount('produks')->orderBy('nama')->get();
 
         return response()->json([
             'success' => true,
@@ -23,7 +23,7 @@ class KategoriController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'nama_kategori' => ['required', 'string', 'max:100', 'unique:kategori,nama_kategori'],
+            'nama' => ['required', 'string', 'max:100', 'unique:kategori,nama'],
         ]);
 
         $kategori = Kategori::create($validated);
@@ -46,9 +46,9 @@ class KategoriController extends Controller
     public function update(Request $request, Kategori $kategori): JsonResponse
     {
         $validated = $request->validate([
-            'nama_kategori' => [
+            'nama' => [
                 'required', 'string', 'max:100',
-                Rule::unique('kategori', 'nama_kategori')->ignore($kategori->id),
+                Rule::unique('kategori', 'nama')->ignore($kategori->id),
             ],
         ]);
 

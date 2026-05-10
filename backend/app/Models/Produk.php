@@ -12,7 +12,7 @@ class Produk extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'nama_produk',
+        'nama',
         'harga',
         'deskripsi',
         'foto',

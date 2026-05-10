@@ -12,7 +12,7 @@ export interface Kategori {
 
 export interface Produk {
   id: number;
-  nama_produk: string;
+  nama: string;
   harga: number;
   foto: string;
   kategori?: Kategori;
@@ -31,9 +31,13 @@ const kategori_tabs = [
 
 interface ProductCatalogProps {
   onAddToCart: (produk: Produk) => void;
+  onProductClick?: (product: Produk) => void;
 }
 
-export function ProductCatalog({ onAddToCart }: ProductCatalogProps) {
+export function ProductCatalog({
+  onAddToCart,
+  onProductClick,
+}: ProductCatalogProps) {
   const [produk, setProduk] = useState<Produk[]>([]);
   const [selectedKategori, setSelectedKategori] = useState<string>("all");
   const [loading, setLoading] = useState(true);
@@ -125,12 +129,13 @@ export function ProductCatalog({ onAddToCart }: ProductCatalogProps) {
                   <Card
                     key={produk.id}
                     className="overflow-hidden hover:shadow-lg transition-shadow"
+                    onClick={() => onProductClick?.(produk)}
                   >
                     <div className="aspect-square relative overflow-hidden bg-gray-100">
                       {produk.foto ? (
                         <Image
                           src={produk.foto}
-                          alt={produk.nama_produk}
+                          alt={produk.nama}
                           fill
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
@@ -151,9 +156,7 @@ export function ProductCatalog({ onAddToCart }: ProductCatalogProps) {
                       <Badge variant="secondary" className="mb-2 text-xs">
                         {produk.kategori?.nama_kategori ?? produk.kategori_id}
                       </Badge>
-                      <h3 className="font-semibold mb-1">
-                        {produk.nama_produk}
-                      </h3>
+                      <h3 className="font-semibold mb-1">{produk.nama}</h3>
                       <p className="text-sm text-gray-500 mb-3 line-clamp-2">
                         {produk.deskripsi}
                       </p>

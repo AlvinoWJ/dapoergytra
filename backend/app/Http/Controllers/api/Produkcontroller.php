@@ -22,19 +22,19 @@ class ProdukController extends Controller
         // Filter by kategori name (slug-friendly)
         if ($request->filled('kategori')) {
             $query->whereHas('kategori', function ($q) use ($request) {
-                $q->where('nama_kategori', 'like', '%' . $request->kategori . '%');
+                $q->where('nama', 'like', '%' . $request->kategori . '%');
             });
         }
 
         // Search by name
         if ($request->filled('search')) {
-            $query->where('nama_produk', 'like', '%' . $request->search . '%');
+            $query->where('nama', 'like', '%' . $request->search . '%');
         }
 
         // Sort
         $sortBy  = $request->input('sort_by', 'created_at');
         $sortDir = $request->input('sort_dir', 'desc');
-        $allowedSorts = ['nama_produk', 'harga', 'stok', 'created_at'];
+        $allowedSorts = ['nama', 'harga', 'stok', 'created_at'];
         if (in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortDir === 'asc' ? 'asc' : 'desc');
         }
@@ -50,12 +50,12 @@ class ProdukController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'nama_produk' => ['required', 'string', 'max:200'],
+            'nama'        => ['required', 'string', 'max:200'],
             'harga'       => ['required', 'numeric', 'min:0'],
             'deskripsi'   => ['nullable', 'string'],
             'foto'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'stok'        => ['required', 'integer', 'min:0'],
-            'kategori_id' => ['required', 'exists:kategori_id'],
+            'kategori_id' => ['required', 'exists:kategori,id'],
         ]);
 
         if ($request->hasFile('foto')) {
@@ -83,12 +83,12 @@ class ProdukController extends Controller
     public function update(Request $request, Produk $produk): JsonResponse
     {
         $validated = $request->validate([
-            'nama_produk' => ['sometimes', 'required', 'string', 'max:200'],
+            'nama'        => ['sometimes', 'required', 'string', 'max:200'],
             'harga'       => ['sometimes', 'required', 'numeric', 'min:0'],
             'deskripsi'   => ['nullable', 'string'],
             'foto'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'stok'        => ['sometimes', 'required', 'integer', 'min:0'],
-            'kategori_id' => ['sometimes', 'required', 'exists:kategoris,kategori_id'],
+            'kategori_id' => ['sometimes', 'required', 'exists:kategori,id'],
         ]);
 
         if ($request->hasFile('foto')) {
