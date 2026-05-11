@@ -9,6 +9,8 @@ import { ProductCatalog } from "@/components/product_catalog";
 import { About } from "@/components/about";
 import { BestProducts } from "@/components/product_best";
 import { ProductDetailModal } from "@/components/product_detail";
+import { useCart } from "@/hooks/use_cart";
+import { useToast } from "@/components/toast/toastprovider";
 
 interface User {
   id: number;
@@ -27,13 +29,15 @@ interface Produk {
   kategori?: Kategori;
   harga: number;
   deskripsi: string;
-  foto: string; // Mengganti emoji dengan URL gambar asli nantinnya
+  foto: string;
   rating?: number;
   reviews_count?: number;
 }
 
 export default function HomePage() {
   const router = useRouter();
+  const { show } = useToast();
+  const { totalItems, addItem } = useCart();
 
   // --- UI States ---
   const [selectedProduk, setSelectedProduk] = useState<Produk | null>(null);
@@ -66,38 +70,56 @@ export default function HomePage() {
     router.refresh();
   };
 
-  // --- Cart Logic (Persiapan Integrasi API) ---
-  const handleAddToCart = (product: Produk) => {
-    if (!isLoggedIn) {
-      setLoginModalOpen(true);
-      return;
+  const requireAuth = (): boolean => {
+    if (!localStorage.getItem("token")) {
+      show("Silakan masuk terlebih dahulu.", "warning");
+      router.push("/login");
+      return false;
     }
-    // TODO: POST request ke API Laravel /api/cart
-    console.log("Add to cart:", product.id);
-    setCartOpen(true);
+    return true;
   };
 
-  const handleAddToCartWithQuantity = (
-    Produk: Produk,
-    quantity: number = 1,
-  ) => {
-    console.log(`Adding ${quantity} of ${Produk.nama} to cart`);
-    // Logic for API call would go here
+  const handleAddToCart = (product: Produk) => {
+    if (!requireAuth()) return;
+
+    addItem({
+      id: product.id,
+      name: product.nama,
+      price: product.harga,
+      image: product.foto,
+    });
+    show(`${product.nama} ditambahkan ke keranjang.`, "success");
   };
 
-  const openProductDetail = (Produk: Produk) => {
-    setSelectedProduk(Produk);
+  const handleAddToCartWithQuantity = (produk: Produk, quantity = 1) => {
+    if (!requireAuth()) return;
+
+    addItem(
+      {
+        id: produk.id,
+        name: produk.nama,
+        price: produk.harga,
+        image: produk.foto,
+      },
+      quantity,
+    );
+    show(`${produk.nama} (×${quantity}) ditambahkan ke keranjang.`, "success");
+  };
+
+  const openProductDetail = (produk: Produk) => {
+    setSelectedProduk(produk);
     setDetailModalOpen(true);
   };
-
-  const cartItemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
   return (
     <div className="min-h-screen bg-white">
       {/* ── NAVBAR ── */}
       <Navbar
-        cartItemCount={cartItemCount}
-        onCartClick={() => setCartOpen(true)}
+        cartItemCount={totalItems}
+        onCartClick={() => {
+          if (!requireAuth()) return;
+          router.push("/cart");
+        }}
         onLoginClick={() => router.push("/login")}
         isLoggedIn={isLoggedIn}
         userName={user?.name || "User"}
@@ -127,17 +149,19 @@ export default function HomePage() {
         onAddToCart={handleAddToCartWithQuantity}
       />
 
-      <Footer />
-      {/* ── OVERLAYS ── */}
-      {/* <CartDrawer 
-        open={cartOpen} 
-        onClose={() => setCartOpen(false)}  */}
-      {/* // items={cartItems} */}
-      {/* /> */}
-      {/* <LoginModal 
-        open={loginModalOpen} 
-        onClose={() => setLoginModalOpen(false)} 
+      {/* <Cart
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        items={items}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeItem}
+        onCheckout={() => {
+          setCartOpen(false);
+          router.push("/cart");
+        }}
       /> */}
+
+      <Footer />
     </div>
   );
 }
