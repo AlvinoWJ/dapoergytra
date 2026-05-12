@@ -165,7 +165,10 @@ export function ProductCatalog({
                           Rp {produk.harga.toLocaleString("id-ID")}
                         </span>
                         <Button
-                          onClick={() => onAddToCart(produk)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddToCart(produk);
+                          }}
                           size="sm"
                           disabled={produk.stok === 0}
                           className="bg-red-600 hover:bg-red-700"

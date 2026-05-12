@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Minus, Plus, X, ShoppingBag } from "lucide-react";
 import Image from "next/image";
-import { useCart } from "@/hooks/use_cart";
+import { useCartContext } from "@/components/cart/cart_provider";
 import { useEffect, useState } from "react";
 
 export default function CartPage() {
   const router = useRouter();
-  const { items, updateQuantity, removeItem } = useCart();
+  const { items, updateQuantity, removeItem } = useCartContext();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checked, setChecked] = useState(false);
 
@@ -36,14 +36,14 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <Button
             variant="ghost"
             onClick={() => router.push("/dashboard")}
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Kembali Belanja
+            Kembali
           </Button>
 
           <div className="text-center py-16">
@@ -75,7 +75,7 @@ export default function CartPage() {
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Lanjut Belanja
+            Kembali
           </Button>
           <h1 className="text-3xl font-bold">Keranjang Belanja</h1>
           <p className="text-gray-600 mt-2">

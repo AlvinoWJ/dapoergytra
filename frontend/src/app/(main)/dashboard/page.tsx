@@ -7,7 +7,7 @@ import { ProductCatalog } from "@/components/product_catalog";
 import { About } from "@/components/about";
 import { BestProducts } from "@/components/product_best";
 import { ProductDetailModal } from "@/components/product_detail";
-import { useCart } from "@/hooks/use_cart";
+import { useCartContext } from "@/components/cart/cart_provider";
 import { useToast } from "@/components/toast/toastprovider";
 
 interface User {
@@ -35,7 +35,7 @@ interface Produk {
 export default function HomePage() {
   const router = useRouter();
   const { show } = useToast();
-  const { totalItems, addItem } = useCart();
+  const { totalItems, addItem } = useCartContext();
 
   // --- UI States ---
   const [selectedProduk, setSelectedProduk] = useState<Produk | null>(null);

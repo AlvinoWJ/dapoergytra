@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
-import { useCart } from "@/hooks/use_cart";
+import { useCartContext } from "./cart/cart_provider";
 import { useToast } from "@/components/toast/toastprovider";
 import { Footer } from "./footer";
 
@@ -16,7 +16,7 @@ interface User {
 export function AppWrapper({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { show } = useToast();
-  const { totalItems } = useCart();
+  const { totalItems } = useCartContext();
 
   const [user, setUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);

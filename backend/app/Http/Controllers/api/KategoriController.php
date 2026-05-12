@@ -23,7 +23,7 @@ class KategoriController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'nama' => ['required', 'string', 'max:100', 'unique:kategori,nama'],
+            'nama' => ['required', 'string', 'max:100', 'unique:kategoris,nama'],
         ]);
 
         $kategori = Kategori::create($validated);
@@ -48,7 +48,7 @@ class KategoriController extends Controller
         $validated = $request->validate([
             'nama' => [
                 'required', 'string', 'max:100',
-                Rule::unique('kategori', 'nama')->ignore($kategori->id),
+                Rule::unique('kategoris', 'nama')->ignore($kategori->id),
             ],
         ]);
 

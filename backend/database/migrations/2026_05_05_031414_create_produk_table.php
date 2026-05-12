@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('produk', function (Blueprint $table) {
+        Schema::create('produks', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
             $table->decimal('harga', 12, 2);
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedInteger('stok')->default(0);
 
             $table->foreignId('kategori_id')
-                  ->constrained('kategori')
+                  ->constrained('kategoris')
                   ->onDelete('restrict');
             $table->timestamps();
         });
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('produk');
+        Schema::dropIfExists('produks');
     }
 };

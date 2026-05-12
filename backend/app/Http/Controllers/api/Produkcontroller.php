@@ -55,7 +55,7 @@ class ProdukController extends Controller
             'deskripsi'   => ['nullable', 'string'],
             'foto'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'stok'        => ['required', 'integer', 'min:0'],
-            'kategori_id' => ['required', 'exists:kategori,id'],
+            'kategori_id' => ['required', 'exists:kategoris,id'],
         ]);
 
         if ($request->hasFile('foto')) {
@@ -88,7 +88,7 @@ class ProdukController extends Controller
             'deskripsi'   => ['nullable', 'string'],
             'foto'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'stok'        => ['sometimes', 'required', 'integer', 'min:0'],
-            'kategori_id' => ['sometimes', 'required', 'exists:kategori,id'],
+            'kategori_id' => ['sometimes', 'required', 'exists:kategoris,id'],
         ]);
 
         if ($request->hasFile('foto')) {

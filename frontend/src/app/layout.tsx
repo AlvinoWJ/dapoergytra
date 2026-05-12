@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins, Geist } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "../components/toast/toastprovider";
+import { CartProvider } from "@/components/cart/cart_provider";
 import { cn } from "@/lib/utils";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -34,7 +35,11 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+            <CartProvider>
+              {children}
+            </CartProvider>
+          </ToastProvider>
       </body>
     </html>
   );

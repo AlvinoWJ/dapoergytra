@@ -65,37 +65,37 @@ export function BestProducts({
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {bestProducts.map((product) => (
+          {bestProducts.map((produk) => (
             <Card
-              key={product.id}
-              onClick={() => onProductClick?.(product)}
+              key={produk.id}
+              onClick={() => onProductClick?.(produk)}
               className="overflow-hidden hover:shadow-xl transition-shadow"
             >
               <div className="aspect-square relative overflow-hidden">
                 <Image
-                  src={product.foto}
-                  alt={product.nama}
+                  src={produk.foto}
+                  alt={produk.nama}
                   fill
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
                 <Badge className="absolute top-4 right-4 bg-red-600">
                   <Star className="h-3 w-3 fill-white mr-1" />
-                  {product.rating}
+                  {produk.rating}
                 </Badge>
               </div>
               <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-2">{product.nama}</h3>
+                <h3 className="font-semibold text-lg mb-2">{produk.nama}</h3>
                 <p className="text-sm text-gray-500 mb-4">
-                  {product.sold} terjual
+                  {produk.sold} terjual
                 </p>
                 <div className="flex justify-between items-center">
                   <span className="text-xl font-bold text-red-700">
-                    Rp {product.harga.toLocaleString("id-ID")}
+                    Rp {produk.harga.toLocaleString("id-ID")}
                   </span>
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onAddToCart(product);
+                      onAddToCart(produk);
                     }}
                     size="sm"
                     className="bg-red-600 hover:bg-red-700"

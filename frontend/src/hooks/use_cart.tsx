@@ -1,10 +1,13 @@
+// frontend/src/hooks/use_cart.tsx
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import api from "@/lib/api";
 
 export interface CartItem {
   id: number;
+  detail_id?: number;
   name: string;
   price: number;
   image: string;
@@ -14,59 +17,103 @@ export interface CartItem {
 export function useCart() {
   const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const requireAuth = useCallback((): boolean => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) {
-      router.push("/login");
-      return false;
+  const isLoggedIn = () =>
+    typeof window !== "undefined" && !!localStorage.getItem("token");
+
+  /** Muat keranjang dari server */
+  const fetchCart = useCallback(async () => {
+    if (!isLoggedIn()) return;
+    try {
+      setLoading(true);
+      const res = await api.get("/keranjang");
+      if (res.data?.success) setItems(res.data.data);
+    } catch {
+      // abaikan error (misal 401 sudah dihandle interceptor)
+    } finally {
+      setLoading(false);
     }
-    return true;
-  }, [router]);
+  }, []);
+
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
   const addItem = useCallback(
-    (product: Omit<CartItem, "quantity">, quantity = 1): boolean => {
-      if (!requireAuth()) return false;
-
-      setItems((prev) => {
-        const existing = prev.find((i) => i.id === product.id);
-        if (existing) {
-          return prev.map((i) =>
-            i.id === product.id ? { ...i, quantity: i.quantity + quantity } : i,
-          );
+    async (
+      product: Omit<CartItem, "quantity" | "detail_id">,
+      quantity = 1,
+    ): Promise<boolean> => {
+      if (!isLoggedIn()) {
+        router.push("/login");
+        return false;
+      }
+      try {
+        const res = await api.post("/keranjang", {
+          produk_id: product.id,
+          jumlah: quantity,
+        });
+        if (res.data?.success) {
+          await fetchCart();
         }
-        return [...prev, { ...product, quantity }];
-      });
-      return true;
+        return true;
+      } catch {
+        return false;
+      }
     },
-    [requireAuth],
+    [router, fetchCart],
   );
 
-  const updateQuantity = useCallback((id: number, quantity: number) => {
-    setItems((prev) =>
-      prev.map((i) =>
-        i.id === id ? { ...i, quantity: Math.max(1, quantity) } : i,
-      ),
-    );
-  }, []);
+  const updateQuantity = useCallback(
+    async (id: number, quantity: number) => {
+      const item = items.find((i) => i.id === id);
+      if (!item?.detail_id) return;
+      try {
+        await api.patch(`/keranjang/${item.detail_id}`, {
+          jumlah: Math.max(1, quantity),
+        });
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === id ? { ...i, quantity: Math.max(1, quantity) } : i,
+          ),
+        );
+      } catch {}
+    },
+    [items],
+  );
 
-  const removeItem = useCallback((id: number) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-  }, []);
+  const removeItem = useCallback(
+    async (id: number) => {
+      const item = items.find((i) => i.id === id);
+      if (!item?.detail_id) return;
+      try {
+        await api.delete(`/keranjang/${item.detail_id}`);
+        setItems((prev) => prev.filter((i) => i.id !== id));
+      } catch {}
+    },
+    [items],
+  );
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const clearCart = useCallback(async () => {
+    try {
+      await api.delete("/keranjang/clear");
+      setItems([]);
+    } catch {}
+  }, []);
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   return {
     items,
+    loading,
     totalItems,
     totalPrice,
     addItem,
     updateQuantity,
     removeItem,
     clearCart,
+    fetchCart,
   };
 }

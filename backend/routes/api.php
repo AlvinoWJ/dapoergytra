@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\KategoriController;
 use App\Http\Controllers\Api\ProdukController;
+use App\Http\Controllers\Api\KeranjangController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -14,6 +15,13 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn(Request $req) => $req->user());
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::prefix('keranjang')->group(function () {
+        Route::get('/',              [KeranjangController::class, 'index']);
+        Route::post('/',             [KeranjangController::class, 'store']);
+        Route::delete('/clear',      [KeranjangController::class, 'clear']);
+        Route::patch('/{detail_id}', [KeranjangController::class, 'update']);
+        Route::delete('/{detail_id}', [KeranjangController::class, 'destroy']);
+    });
 });
 
 Route::get('/kategori',              [KategoriController::class, 'index']);
@@ -28,6 +36,6 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::delete('/kategoris/{kategori}',  [KategoriController::class, 'destroy']);
 
     Route::post  ('/produks',           [ProdukController::class, 'store']);
-    Route::post  ('/produks/{produk}',  [ProdukController::class, 'update']); // POST karena multipart/form-data
+    Route::post  ('/produks/{produk}',  [ProdukController::class, 'update']);
     Route::delete('/produks/{produk}',  [ProdukController::class, 'destroy']);
 });

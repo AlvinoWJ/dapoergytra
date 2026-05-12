@@ -1,6 +1,7 @@
 import { ShoppingCart, User, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 
 interface NavbarProps {
   cartItemCount: number;
@@ -68,9 +69,9 @@ export function Navbar({
             >
               <ShoppingCart className="h-6 w-6 stroke-[1.5]" />
               {cartItemCount > 0 && (
-                <span className="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full">
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-600">
                   {cartItemCount}
-                </span>
+                </Badge>
               )}
             </Button>
 
