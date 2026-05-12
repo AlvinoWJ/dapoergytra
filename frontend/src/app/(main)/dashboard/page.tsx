@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navbar";
 import { Hero } from "@/components/hero";
 import { ProductCatalog } from "@/components/product_catalog";
 import { About } from "@/components/about";
@@ -42,33 +40,14 @@ export default function HomePage() {
   // --- UI States ---
   const [selectedProduk, setSelectedProduk] = useState<Produk | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("Semua");
+  // const [cartOpen, setCartOpen] = useState(false);
+  // const [loginModalOpen, setLoginModalOpen] = useState(false);
+  // const [activeCategory, setActiveCategory] = useState("Semua");
 
   // --- Data States (Akan diisi dari API) ---
-  const [Produk, setProduk] = useState<Produk[]>([]);
-  const [user, setUser] = useState<User | null>(null);
-  const [cartItems, setCartItems] = useState<any[]>([]); // Sebaiknya ambil dari state management/API
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // --- Logic Auth & Initial Data ---
-  useEffect(() => {
-    // Check token untuk status login
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-
-    // TODO: Fetch User Profile & Products from Laravel API
-    // fetchProducts();
-    // if (token) fetchUserProfile();
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    setUser(null);
-    router.refresh();
-  };
+  // const [Produk, setProduk] = useState<Produk[]>([]);
+  // const [user, setUser] = useState<User | null>(null);
+  // const [cartItems, setCartItems] = useState<any[]>([]);
 
   const requireAuth = (): boolean => {
     if (!localStorage.getItem("token")) {
@@ -113,19 +92,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ── NAVBAR ── */}
-      <Navbar
-        cartItemCount={totalItems}
-        onCartClick={() => {
-          if (!requireAuth()) return;
-          router.push("/cart");
-        }}
-        onLoginClick={() => router.push("/login")}
-        isLoggedIn={isLoggedIn}
-        userName={user?.name || "User"}
-        onLogout={handleLogout}
-      />
-
       <Hero />
 
       <BestProducts
@@ -160,8 +126,6 @@ export default function HomePage() {
           router.push("/cart");
         }}
       /> */}
-
-      <Footer />
     </div>
   );
 }
