@@ -27,6 +27,24 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
     // TODO: if (token) fetchUserProfile().then(setUser)
   }, []);
 
+  const handleCartClick = () => {
+    if (!localStorage.getItem("token")) {
+      show("Silakan masuk terlebih dahulu.", "warning");
+      router.push("/login");
+      return;
+    }
+    router.push("/cart");
+  };
+
+  const handleOrdersClick = () => {
+    if (!localStorage.getItem("token")) {
+      show("Silakan masuk terlebih dahulu.", "warning");
+      router.push("/login");
+      return;
+    }
+    router.push("/orders");
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsLoggedIn(false);
@@ -38,14 +56,8 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
     <>
       <Navbar
         cartItemCount={totalItems}
-        onCartClick={() => {
-          if (!localStorage.getItem("token")) {
-            show("Silakan masuk terlebih dahulu.", "warning");
-            router.push("/login");
-            return;
-          }
-          router.push("/cart");
-        }}
+        onCartClick={handleCartClick}
+        onOrdersClick={handleOrdersClick}
         onLoginClick={() => router.push("/login")}
         isLoggedIn={isLoggedIn}
         userName={user?.name || "User"}

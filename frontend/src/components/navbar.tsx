@@ -1,4 +1,4 @@
-import { ShoppingCart, User, Menu, X } from "lucide-react";
+import { ShoppingCart, User, Menu, X, Package } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -7,6 +7,7 @@ interface NavbarProps {
   cartItemCount: number;
   onCartClick: () => void;
   onLoginClick: () => void;
+  onOrdersClick?: () => void;
   isLoggedIn: boolean;
   userName?: string;
   onLogout: () => void;
@@ -16,6 +17,7 @@ export function Navbar({
   cartItemCount,
   onCartClick,
   onLoginClick,
+  onOrdersClick,
   isLoggedIn,
   userName,
   onLogout,
@@ -60,6 +62,17 @@ export function Navbar({
           </div>
           {/* Right Actions */}
           <div className="flex items-center gap-2">
+            {isLoggedIn && onOrdersClick && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onOrdersClick}
+                className="hidden md:flex text-gray-700"
+              >
+                <Package className="h-5 w-5" />
+              </Button>
+            )}
+
             {/* Cart Icon - Ghost Style */}
             <Button
               variant="ghost"
