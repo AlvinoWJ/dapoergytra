@@ -50,7 +50,7 @@ class KeranjangController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'produk_id' => 'required|exists:produks,id',
+            'produk_id' => 'required|exists:produk,id',
             'jumlah'    => 'required|integer|min:1',
         ]);
 

@@ -12,7 +12,7 @@ class KategoriController extends Controller
 {
     public function index(): JsonResponse
     {
-        $kategori = Kategori::withCount('produks')->orderBy('nama')->get();
+        $kategori = Kategori::withCount('produk')->orderBy('nama')->get();
 
         return response()->json([
             'success' => true,
@@ -23,7 +23,7 @@ class KategoriController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'nama' => ['required', 'string', 'max:100', 'unique:kategoris,nama'],
+            'nama' => ['required', 'string', 'max:100', 'unique:kategori,nama'],
         ]);
 
         $kategori = Kategori::create($validated);
@@ -39,7 +39,7 @@ class KategoriController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => $kategori->load('produks'),
+            'data'    => $kategori->load('produk'),
         ]);
     }
 
@@ -48,7 +48,7 @@ class KategoriController extends Controller
         $validated = $request->validate([
             'nama' => [
                 'required', 'string', 'max:100',
-                Rule::unique('kategoris', 'nama')->ignore($kategori->id),
+                Rule::unique('kategori', 'nama')->ignore($kategori->id),
             ],
         ]);
 
@@ -63,7 +63,7 @@ class KategoriController extends Controller
 
     public function destroy(Kategori $kategori): JsonResponse
     {
-        if ($kategori->produks()->exists()) {
+        if ($kategori->produk()->exists()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Kategori tidak dapat dihapus karena masih memiliki produk.',

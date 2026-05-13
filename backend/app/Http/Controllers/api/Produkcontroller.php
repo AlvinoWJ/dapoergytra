@@ -39,11 +39,11 @@ class ProdukController extends Controller
             $query->orderBy($sortBy, $sortDir === 'asc' ? 'asc' : 'desc');
         }
 
-        $produks = $query->paginate($request->input('per_page', 12));
+        $produk = $query->paginate($request->input('per_page', 12));
 
         return response()->json([
             'success' => true,
-            'data'    => $produks,
+            'data'    => $produk,
         ]);
     }
 
@@ -55,11 +55,11 @@ class ProdukController extends Controller
             'deskripsi'   => ['nullable', 'string'],
             'foto'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'stok'        => ['required', 'integer', 'min:0'],
-            'kategori_id' => ['required', 'exists:kategoris,id'],
+            'kategori_id' => ['required', 'exists:kategori,id'],
         ]);
 
         if ($request->hasFile('foto')) {
-            $path = $request->file('foto')->store('produks', 'public');
+            $path = $request->file('foto')->store('produk', 'public');
             $validated['foto'] = $path;
         }
 
@@ -88,7 +88,7 @@ class ProdukController extends Controller
             'deskripsi'   => ['nullable', 'string'],
             'foto'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'stok'        => ['sometimes', 'required', 'integer', 'min:0'],
-            'kategori_id' => ['sometimes', 'required', 'exists:kategoris,id'],
+            'kategori_id' => ['sometimes', 'required', 'exists:kategori,id'],
         ]);
 
         if ($request->hasFile('foto')) {
@@ -96,7 +96,7 @@ class ProdukController extends Controller
             if ($produk->foto && !str_starts_with($produk->foto, 'http')) {
                 Storage::disk('public')->delete($produk->foto);
             }
-            $path = $request->file('foto')->store('produks', 'public');
+            $path = $request->file('foto')->store('produk', 'public');
             $validated['foto'] = $path;
         }
 
@@ -130,7 +130,7 @@ class ProdukController extends Controller
     {
         $limit = $request->input('limit', 3);
 
-        $produks = Produk::with('kategori')
+        $produk = Produk::with('kategori')
             ->withCount('detailPesanans as total_terjual')
             ->orderByDesc('total_terjual')
             ->limit($limit)
@@ -138,7 +138,7 @@ class ProdukController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $produks,
+            'data'    => $produk,
         ]);
     }
 }
