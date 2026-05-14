@@ -10,39 +10,39 @@ import {
   CheckCircle,
   XCircle,
   Truck,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/components/toast/toastprovider";
 import api from "@/lib/api";
 
-/* ── Types ── */
 type OrderStatus =
-  | "pending"
-  | "confirmed"
-  | "processing"
-  | "shipped"
-  | "delivered"
-  | "cancelled";
+  | "menunggu_pembayaran"
+  | "diproses"
+  | "dikirim"
+  | "selesai"
+  | "dibatalkan";
 
 interface OrderItem {
   id: number;
   produk_id: number;
   nama: string;
   harga: number;
-  foto: string;
+  foto: string | null;
   jumlah: number;
 }
 
 interface Order {
   id: number;
-  kode_pesanan: string;
   status: OrderStatus;
+  status_label: string;
   nama_penerima: string;
   no_hp: string;
   alamat: string;
-  catatan?: string;
+  catatan?: string | null;
   metode_pembayaran: "transfer" | "ewallet" | "cod";
   subtotal: number;
   ongkir: number;
@@ -51,59 +51,54 @@ interface Order {
   detail: OrderItem[];
 }
 
-/* ── Helpers ── */
-function getStatusInfo(status: OrderStatus) {
-  const map: Record<
-    OrderStatus,
-    { label: string; color: string; icon: React.ElementType }
-  > = {
-    pending: {
-      label: "Menunggu Konfirmasi",
-      color: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      icon: Clock,
-    },
-    confirmed: {
-      label: "Dikonfirmasi",
-      color: "bg-blue-100 text-blue-800 border-blue-200",
-      icon: CheckCircle,
-    },
-    processing: {
-      label: "Diproses",
-      color: "bg-purple-100 text-purple-800 border-purple-200",
-      icon: Package,
-    },
-    shipped: {
-      label: "Dikirim",
-      color: "bg-indigo-100 text-indigo-800 border-indigo-200",
-      icon: Truck,
-    },
-    delivered: {
-      label: "Selesai",
-      color: "bg-green-100 text-green-800 border-green-200",
-      icon: CheckCircle,
-    },
-    cancelled: {
-      label: "Dibatalkan",
-      color: "bg-red-100 text-red-800 border-red-200",
-      icon: XCircle,
-    },
-  };
+type StatusConfig = {
+  label: string;
+  badgeClass: string;
+  icon: React.ElementType;
+};
+
+const STATUS_MAP: Record<OrderStatus, StatusConfig> = {
+  menunggu_pembayaran: {
+    label: "Menunggu Pembayaran",
+    badgeClass: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    icon: Clock,
+  },
+  diproses: {
+    label: "Diproses",
+    badgeClass: "bg-purple-100 text-purple-800 border-purple-200",
+    icon: Package,
+  },
+  dikirim: {
+    label: "Dikirim",
+    badgeClass: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    icon: Truck,
+  },
+  selesai: {
+    label: "Selesai",
+    badgeClass: "bg-green-100 text-green-800 border-green-200",
+    icon: CheckCircle,
+  },
+  dibatalkan: {
+    label: "Dibatalkan",
+    badgeClass: "bg-red-100 text-red-800 border-red-200",
+    icon: XCircle,
+  },
+};
+
+const PAYMENT_LABEL: Record<string, string> = {
+  transfer: "Transfer Bank",
+  ewallet: "E-Wallet",
+  cod: "COD (Bayar di Tempat)",
+};
+
+function getStatusConfig(status: OrderStatus): StatusConfig {
   return (
-    map[status] ?? {
+    STATUS_MAP[status] ?? {
       label: status,
-      color: "bg-gray-100 text-gray-800 border-gray-200",
+      badgeClass: "bg-gray-100 text-gray-800 border-gray-200",
       icon: Package,
     }
   );
-}
-
-function getPaymentLabel(method: string) {
-  const map: Record<string, string> = {
-    transfer: "Transfer Bank",
-    ewallet: "E-Wallet",
-    cod: "COD (Bayar di Tempat)",
-  };
-  return map[method] ?? method;
 }
 
 function formatDate(dateString: string) {
@@ -116,17 +111,16 @@ function formatDate(dateString: string) {
   });
 }
 
-/* ── Skeleton ── */
 function OrderSkeleton() {
   return (
     <Card className="animate-pulse">
       <CardContent className="pt-6">
         <div className="flex justify-between mb-4">
           <div className="space-y-2">
-            <div className="h-5 w-48 bg-gray-200 rounded" />
-            <div className="h-4 w-32 bg-gray-100 rounded" />
+            <div className="h-5 w-32 bg-gray-200 rounded" />
+            <div className="h-4 w-44 bg-gray-100 rounded" />
           </div>
-          <div className="h-6 w-28 bg-gray-200 rounded-full" />
+          <div className="h-6 w-36 bg-gray-200 rounded-full" />
         </div>
         <Separator className="my-4" />
         <div className="flex gap-3">
@@ -142,11 +136,13 @@ function OrderSkeleton() {
   );
 }
 
-/* ── Main Page ── */
 export default function OrdersPage() {
   const router = useRouter();
+  const { show } = useToast();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState<number | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const fetchOrders = useCallback(async () => {
@@ -157,7 +153,6 @@ export default function OrdersPage() {
         setOrders(res.data.data);
       }
     } catch {
-      // error ditangani interceptor (401 → redirect login)
     } finally {
       setLoading(false);
     }
@@ -173,20 +168,42 @@ export default function OrdersPage() {
     fetchOrders();
   }, [router, fetchOrders]);
 
+  const handleCancel = async (orderId: number) => {
+    if (!confirm("Batalkan pesanan ini?")) return;
+    setCancelling(orderId);
+    try {
+      const res = await api.patch(`/pesanan/${orderId}/cancel`);
+      if (res.data?.success) {
+        show("Pesanan berhasil dibatalkan.", "success");
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId ? { ...o, status: "dibatalkan" } : o,
+          ),
+        );
+      }
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Gagal membatalkan pesanan.";
+      show(msg, "error");
+    } finally {
+      setCancelling(null);
+    }
+  };
+
   if (!isLoggedIn) return null;
 
-  /* ── Empty state ── */
   if (!loading && orders.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Button
             variant="ghost"
             onClick={() => router.push("/dashboard")}
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Kembali
+            Kembali ke Beranda
           </Button>
           <div className="text-center py-16">
             <Package className="h-24 w-24 text-gray-300 mx-auto mb-4" />
@@ -208,8 +225,7 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <Button
             variant="ghost"
@@ -217,60 +233,79 @@ export default function OrdersPage() {
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Kembali
+            Kembali ke Beranda
           </Button>
-          <h1 className="text-3xl font-bold">Pesanan Saya</h1>
-          <p className="text-gray-600 mt-2">
-            Pantau status dan riwayat pesanan Anda
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Pesanan Saya</h1>
+              <p className="text-gray-600 mt-1">
+                Pantau status dan riwayat pesanan Anda
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={fetchOrders}
+              disabled={loading}
+              title="Refresh"
+            >
+              <RefreshCw
+                className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
+              />
+            </Button>
+          </div>
         </div>
 
-        {/* Orders List */}
         <div className="space-y-4">
           {loading
             ? Array.from({ length: 3 }).map((_, i) => <OrderSkeleton key={i} />)
             : orders.map((order) => {
-                const statusInfo = getStatusInfo(order.status);
-                const StatusIcon = statusInfo.icon;
+                const cfg = getStatusConfig(order.status);
+                const StatusIcon = cfg.icon;
+                const canCancel = order.status === "menunggu_pembayaran";
 
                 return (
                   <Card key={order.id}>
                     <CardContent className="pt-6">
-                      {/* Order Header */}
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
                         <div>
                           <h3 className="font-semibold text-lg">
-                            {order.kode_pesanan}
+                            Pesanan #{order.id}
                           </h3>
                           <p className="text-sm text-gray-500">
                             {formatDate(order.created_at)}
                           </p>
                         </div>
                         <Badge
-                          className={`${statusInfo.color} flex items-center gap-1 w-fit border`}
+                          className={`${cfg.badgeClass} flex items-center gap-1 w-fit border`}
                         >
                           <StatusIcon className="h-3 w-3" />
-                          {statusInfo.label}
+                          {cfg.label}
                         </Badge>
                       </div>
 
                       <Separator className="my-4" />
 
-                      {/* Order Items */}
                       <div className="space-y-3 mb-4">
                         {order.detail.map((item) => (
                           <div key={item.id} className="flex gap-3">
-                            <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 relative">
-                              <Image
-                                src={item.foto}
-                                alt={item.nama}
-                                fill
-                                className="object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src =
-                                    "/cake_hero.jpg";
-                                }}
-                              />
+                            <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 relative bg-gray-100">
+                              {item.foto ? (
+                                <Image
+                                  src={item.foto}
+                                  alt={item.nama}
+                                  fill
+                                  className="object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src =
+                                      "/cake_hero.jpg";
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-2xl">
+                                  🎂
+                                </div>
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="font-semibold text-sm">
@@ -292,7 +327,6 @@ export default function OrdersPage() {
 
                       <Separator className="my-4" />
 
-                      {/* Order Details */}
                       <div className="grid sm:grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-gray-500 mb-1">Penerima</p>
@@ -310,7 +344,8 @@ export default function OrdersPage() {
                             Metode Pembayaran
                           </p>
                           <p className="font-semibold">
-                            {getPaymentLabel(order.metode_pembayaran)}
+                            {PAYMENT_LABEL[order.metode_pembayaran] ??
+                              order.metode_pembayaran}
                           </p>
                         </div>
                         <div>
@@ -335,46 +370,6 @@ export default function OrdersPage() {
                         </>
                       )}
 
-                      {/* Payment instructions for pending transfer orders */}
-                      {order.status === "pending" &&
-                        order.metode_pembayaran === "transfer" && (
-                          <>
-                            <Separator className="my-4" />
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                              <h4 className="font-semibold text-sm mb-2">
-                                Informasi Pembayaran
-                              </h4>
-                              <p className="text-sm text-gray-700 mb-3">
-                                Silakan transfer ke salah satu rekening berikut:
-                              </p>
-                              <div className="space-y-2 text-sm">
-                                <div className="bg-white p-2 rounded border">
-                                  <p className="font-semibold">
-                                    BCA - 1234567890
-                                  </p>
-                                  <p className="text-gray-600">
-                                    a.n. dapoergytra
-                                  </p>
-                                </div>
-                                <div className="bg-white p-2 rounded border">
-                                  <p className="font-semibold">
-                                    Mandiri - 0987654321
-                                  </p>
-                                  <p className="text-gray-600">
-                                    a.n. dapoergytra
-                                  </p>
-                                </div>
-                              </div>
-                              <p className="text-xs text-yellow-700 mt-3">
-                                Cantumkan kode pesanan{" "}
-                                <strong>{order.kode_pesanan}</strong> sebagai
-                                berita transfer.
-                              </p>
-                            </div>
-                          </>
-                        )}
-
-                      {/* Rincian harga */}
                       <Separator className="my-4" />
                       <div className="space-y-1 text-sm">
                         <div className="flex justify-between text-gray-600">
@@ -394,6 +389,61 @@ export default function OrdersPage() {
                           </span>
                         </div>
                       </div>
+
+                      {order.status === "menunggu_pembayaran" &&
+                        order.metode_pembayaran === "transfer" && (
+                          <>
+                            <Separator className="my-4" />
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                              <h4 className="font-semibold text-sm mb-2">
+                                Informasi Pembayaran
+                              </h4>
+                              <p className="text-sm text-gray-700 mb-3">
+                                Silakan transfer ke salah satu rekening berikut:
+                              </p>
+                              <div className="space-y-2 text-sm">
+                                <div className="bg-white p-2 rounded border">
+                                  <p className="font-semibold">
+                                    BCA – 1234567890
+                                  </p>
+                                  <p className="text-gray-600">
+                                    a.n. dapoergytra
+                                  </p>
+                                </div>
+                                <div className="bg-white p-2 rounded border">
+                                  <p className="font-semibold">
+                                    Mandiri – 0987654321
+                                  </p>
+                                  <p className="text-gray-600">
+                                    a.n. dapoergytra
+                                  </p>
+                                </div>
+                              </div>
+                              <p className="text-xs text-yellow-700 mt-3">
+                                Cantumkan nomor pesanan{" "}
+                                <strong>#{order.id}</strong> sebagai berita
+                                transfer.
+                              </p>
+                            </div>
+                          </>
+                        )}
+
+                      {canCancel && (
+                        <>
+                          <Separator className="my-4" />
+                          <div className="flex justify-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCancel(order.id)}
+                              loading={cancelling === order.id}
+                              className="border-red-300 text-red-600 hover:bg-red-50"
+                            >
+                              Batalkan Pesanan
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </CardContent>
                   </Card>
                 );

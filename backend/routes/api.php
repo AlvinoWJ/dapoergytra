@@ -7,11 +7,18 @@ use App\Http\Controllers\Api\KategoriController;
 use App\Http\Controllers\Api\ProdukController;
 use App\Http\Controllers\Api\KeranjangController;
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\PesananController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login',    [AuthController::class, 'login']);
 });
+
+Route::get('/kategori',              [KategoriController::class, 'index']);
+Route::get('/kategori/{kategori}',   [KategoriController::class, 'show']);
+Route::get('/produk',                [ProdukController::class, 'index']);
+Route::get('/produk/best-sellers',   [ProdukController::class, 'bestSellers']);
+Route::get('/produk/{produk}',       [ProdukController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn(Request $req) => $req->user());
@@ -26,16 +33,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/checkout', [CheckoutController::class, 'store']);
-    Route::get('/orders',                [CheckoutController::class, 'index']);
-    Route::get('/orders/{id}',           [CheckoutController::class, 'show']);
-    Route::patch('/orders/{id}/cancel',  [CheckoutController::class, 'cancel']);
-});
 
-Route::get('/kategori',              [KategoriController::class, 'index']);
-Route::get('/kategori/{kategori}',   [KategoriController::class, 'show']);
-Route::get('/produk',                [ProdukController::class, 'index']);
-Route::get('/produk/best-sellers',   [ProdukController::class, 'bestSellers']);
-Route::get('/produk/{produk}',       [ProdukController::class, 'show']);
+    Route::prefix('pesanan')->group(function () {
+        Route::get('/',            [PesananController::class, 'index']);
+        Route::get('/{id}',        [PesananController::class, 'show']);
+        Route::patch('/{id}/cancel', [PesananController::class, 'cancel']);
+    });
+});
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post  ('/kategori',             [KategoriController::class, 'store']);

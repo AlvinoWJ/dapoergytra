@@ -71,12 +71,7 @@ class CheckoutController extends Controller
         try {
             $pesanan = DB::transaction(function () use ($validated, $user, $keranjang, $ongkir) {
 
-                // Hitung subtotal
-                $subtotal = $keranjang->details->sum(
-                    fn ($d) => $d->produk->harga * $d->jumlah
-                );
-
-                // Buat pesanan
+                // ── 3. Buat pesanan awal (subtotal & total diisi 0, diupdate setelah detail) ──
                 $pesanan = Pesanan::create([
                     'user_id'           => $user->id,
                     'nama_penerima'     => $validated['nama_penerima'],
@@ -84,13 +79,13 @@ class CheckoutController extends Controller
                     'alamat'            => $validated['alamat'],
                     'catatan'           => $validated['catatan'] ?? null,
                     'metode_pembayaran' => $validated['metode_pembayaran'],
-                    'subtotal'          => $subtotal,
+                    'subtotal'          => 0,
                     'ongkir'            => $ongkir,
-                    'total'             => $subtotal + $ongkir,
+                    'total'             => 0,
                     'status'            => 'menunggu_pembayaran',
                 ]);
 
-                // Buat detail pesanan & kurangi stok
+                // ── 4. Buat detail_pesanan & kurangi stok ──
                 foreach ($keranjang->details as $detail) {
                     $produk = $detail->produk;
 
@@ -98,15 +93,24 @@ class CheckoutController extends Controller
                         'pesanan_id'   => $pesanan->id,
                         'produk_id'    => $produk->id,
                         'jumlah'       => $detail->jumlah,
-                        'harga_satuan' => $produk->harga,
-                        'subtotal'     => $produk->harga * $detail->jumlah,
+                        'harga_satuan' => (int) $produk->harga,
+                        // subtotal per-baris = harga × jumlah, dihitung di DB layer
+                        'subtotal'     => (int) $produk->harga * $detail->jumlah,
                     ]);
 
-                    // Kurangi stok produk
                     $produk->decrement('stok', $detail->jumlah);
                 }
 
-                // Kosongkan keranjang
+                // ── 5. Hitung subtotal dari detail_pesanan (single source of truth) ──
+                $subtotal = $pesanan->details()->sum('subtotal');
+
+                // ── 6. Update pesanan dengan nilai final ──
+                $pesanan->update([
+                    'subtotal' => $subtotal,
+                    'total'    => $subtotal + $ongkir,
+                ]);
+
+                // ── 7. Kosongkan keranjang ──
                 $keranjang->details()->delete();
 
                 return $pesanan;
