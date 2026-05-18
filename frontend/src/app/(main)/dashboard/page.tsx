@@ -10,11 +10,11 @@ import { ProductDetailModal } from "@/components/product_detail";
 import { useCartContext } from "@/components/cart/cart_provider";
 import { useToast } from "@/components/toast/toastprovider";
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
+// interface User {
+//   id: number;
+//   name: string;
+//   email: string;
+// }
 
 export interface Kategori {
   id: number;
@@ -35,7 +35,7 @@ interface Produk {
 export default function HomePage() {
   const router = useRouter();
   const { show } = useToast();
-  const { totalItems, addItem } = useCartContext();
+  const { addItem } = useCartContext();
 
   // --- UI States ---
   const [selectedProduk, setSelectedProduk] = useState<Produk | null>(null);
@@ -48,6 +48,22 @@ export default function HomePage() {
   // const [Produk, setProduk] = useState<Produk[]>([]);
   // const [user, setUser] = useState<User | null>(null);
   // const [cartItems, setCartItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    const target = sessionStorage.getItem("scrollTarget");
+    if (!target) return;
+
+    sessionStorage.removeItem("scrollTarget");
+
+    const timer = setTimeout(() => {
+      const el = document.getElementById(target);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const requireAuth = (): boolean => {
     if (!localStorage.getItem("token")) {
