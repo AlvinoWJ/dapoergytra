@@ -23,12 +23,20 @@ class Pesanan extends Model
         'ongkir',
         'total',
         'status',
+        'xendit_invoice_id',
+        'xendit_invoice_url',
+        'xendit_status',
+        'xendit_payment_method',
+        'xendit_expires_at',
+        'paid_at',
     ];
 
     protected $casts = [
         'subtotal' => 'integer',
         'ongkir'   => 'integer',
         'total'    => 'integer',
+        'xendit_expires_at'  => 'datetime',
+        'paid_at'            => 'datetime',
     ];
 
     /* ── Relations ── */
@@ -44,8 +52,6 @@ class Pesanan extends Model
     }
 
     /* ── Helpers ── */
-
-    /** Label status dalam Bahasa Indonesia */
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
@@ -56,5 +62,12 @@ class Pesanan extends Model
             'dibatalkan'          => 'Dibatalkan',
             default               => ucfirst($this->status),
         };
+    }
+
+    public function isInvoiceActive(): bool
+    {
+        if (! $this->xendit_invoice_url) return false;
+        if (! $this->xendit_expires_at) return true;
+        return $this->xendit_expires_at->isFuture();
     }
 }

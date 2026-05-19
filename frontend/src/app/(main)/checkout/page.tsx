@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, QrCode } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -17,7 +17,6 @@ interface FormFields {
   phone: string;
   address: string;
   notes: string;
-  paymentMethod: "transfer" | "ewallet" | "cod";
 }
 
 interface FormErrors {
@@ -38,45 +37,45 @@ function validate(fields: FormFields): FormErrors {
 }
 
 /* ── Payment option component ── */
-function PaymentOption({
-  value,
-  selected,
-  onSelect,
-  title,
-  subtitle,
-}: {
-  value: string;
-  selected: boolean;
-  onSelect: (v: string) => void;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <div
-      onClick={() => onSelect(value)}
-      className={[
-        "flex items-center gap-3 border rounded-xl p-4 cursor-pointer transition-all",
-        selected
-          ? "border-red-500 bg-red-50"
-          : "border-slate-200 hover:bg-slate-50",
-      ].join(" ")}
-    >
-      {/* Custom radio */}
-      <span
-        className={[
-          "h-4 w-4 rounded-full border-2 flex-shrink-0 transition-all",
-          selected
-            ? "border-red-600 bg-red-600 shadow-[inset_0_0_0_2px_white]"
-            : "border-slate-300",
-        ].join(" ")}
-      />
-      <div>
-        <p className="font-semibold text-sm">{title}</p>
-        <p className="text-xs text-slate-500">{subtitle}</p>
-      </div>
-    </div>
-  );
-}
+// function PaymentOption({
+//   value,
+//   selected,
+//   onSelect,
+//   title,
+//   subtitle,
+// }: {
+//   value: string;
+//   selected: boolean;
+//   onSelect: (v: string) => void;
+//   title: string;
+//   subtitle: string;
+// }) {
+//   return (
+//     <div
+//       onClick={() => onSelect(value)}
+//       className={[
+//         "flex items-center gap-3 border rounded-xl p-4 cursor-pointer transition-all",
+//         selected
+//           ? "border-red-500 bg-red-50"
+//           : "border-slate-200 hover:bg-slate-50",
+//       ].join(" ")}
+//     >
+//       {/* Custom radio */}
+//       <span
+//         className={[
+//           "h-4 w-4 rounded-full border-2 flex-shrink-0 transition-all",
+//           selected
+//             ? "border-red-600 bg-red-600 shadow-[inset_0_0_0_2px_white]"
+//             : "border-slate-300",
+//         ].join(" ")}
+//       />
+//       <div>
+//         <p className="font-semibold text-sm">{title}</p>
+//         <p className="text-xs text-slate-500">{subtitle}</p>
+//       </div>
+//     </div>
+//   );
+// }
 
 /* ── Main Page ── */
 export default function CheckoutPage() {
@@ -89,7 +88,6 @@ export default function CheckoutPage() {
     phone: "",
     address: "",
     notes: "",
-    paymentMethod: "transfer",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -141,14 +139,19 @@ export default function CheckoutPage() {
         no_hp: fields.phone,
         alamat: fields.address,
         catatan: fields.notes || null,
-        metode_pembayaran: fields.paymentMethod,
       });
 
       if (res.data?.success) {
         await clearCart();
-        show("Pesanan berhasil dibuat!", "success");
-        const orderId = res.data?.data?.id;
-        router.push(orderId ? `/orders/${orderId}` : "/orders");
+        show("Pesanan dibuat! Mengarahkan ke halaman pembayaran...", "success");
+
+        const invoiceUrl = res.data?.data?.invoice_url;
+
+        if (invoiceUrl) {
+          window.location.href = invoiceUrl;
+        } else {
+          router.push("/orders");
+        }
       }
     } catch (err: unknown) {
       const data = (
@@ -289,44 +292,23 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-semibold mb-5">
                   Metode Pembayaran
                 </h2>
-                <div className="flex flex-col gap-3">
-                  <PaymentOption
-                    value="transfer"
-                    selected={fields.paymentMethod === "transfer"}
-                    onSelect={(v) =>
-                      setFields((p) => ({
-                        ...p,
-                        paymentMethod: v as FormFields["paymentMethod"],
-                      }))
-                    }
-                    title="Transfer Bank"
-                    subtitle="BCA, Mandiri, BNI"
-                  />
-                  <PaymentOption
-                    value="ewallet"
-                    selected={fields.paymentMethod === "ewallet"}
-                    onSelect={(v) =>
-                      setFields((p) => ({
-                        ...p,
-                        paymentMethod: v as FormFields["paymentMethod"],
-                      }))
-                    }
-                    title="E-Wallet"
-                    subtitle="GoPay, OVO, DANA"
-                  />
-                  <PaymentOption
-                    value="cod"
-                    selected={fields.paymentMethod === "cod"}
-                    onSelect={(v) =>
-                      setFields((p) => ({
-                        ...p,
-                        paymentMethod: v as FormFields["paymentMethod"],
-                      }))
-                    }
-                    title="COD (Bayar di Tempat)"
-                    subtitle="Bayar saat produk diterima"
-                  />
+                <div className="flex items-center gap-4 border border-red-400 bg-red-50 rounded-xl p-4">
+                  <div className="h-10 w-10 rounded-lg bg-white border flex items-center justify-center flex-shrink-0">
+                    <QrCode className="h-6 w-6 text-gray-700" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">QRIS</p>
+                    <p className="text-xs text-slate-500">
+                      Scan QR dengan aplikasi apapun — GoPay, OVO, DANA,
+                      ShopeePay, m-Banking, dll
+                    </p>
+                  </div>
+                  <span className="ml-auto h-4 w-4 rounded-full border-2 border-red-600 bg-red-600 shadow-[inset_0_0_0_2px_white] flex-shrink-0" />
                 </div>
+                <p className="text-xs text-slate-400 mt-3">
+                  Setelah klik &ldquo;Konfirmasi Pesanan&rdquo;, Anda akan
+                  diarahkan ke halaman pembayaran untuk scan QRIS.
+                </p>
               </CardContent>
             </Card>
 
@@ -344,7 +326,7 @@ export default function CheckoutPage() {
                 loading={loading}
                 className="flex-1 bg-red-600 hover:bg-red-700"
               >
-                Konfirmasi Pesanan
+                {loading ? "Memproses..." : "Konfirmasi & Bayar"}
               </Button>
             </div>
           </div>

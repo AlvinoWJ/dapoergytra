@@ -18,8 +18,8 @@ return new class extends Migration
             $table->text('alamat');
             $table->text('catatan')->nullable();
 
-            $table->enum('metode_pembayaran', ['transfer', 'ewallet', 'cod'])
-                  ->default('transfer');
+            $table->enum('metode_pembayaran', ['transfer', 'ewallet', 'cod', 'qris'])
+                  ->default('qris');
 
             $table->unsignedBigInteger('subtotal')->default(0);
             $table->unsignedBigInteger('ongkir')->default(15000);
@@ -33,6 +33,12 @@ return new class extends Migration
                 'dibatalkan',
             ])->default('menunggu_pembayaran');
 
+            $table->string('xendit_invoice_id')->nullable();
+            $table->string('xendit_invoice_url', 500)->nullable();
+            $table->string('xendit_status')->nullable();
+            $table->string('xendit_payment_method')->nullable();
+            $table->timestamp('xendit_expires_at')->nullable();
+            $table->timestamp('paid_at')->nullable();
             $table->timestamps();
         });
     }

@@ -10,9 +10,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Services\XenditService;
 
 class CheckoutController extends Controller
 {
+    public function __construct(private XenditService $xendit) {}
+
     /**
      * POST /api/checkout
      *
@@ -25,14 +28,12 @@ class CheckoutController extends Controller
             'no_hp'            => ['required', 'string', 'max:20', 'regex:/^0[0-9]{8,12}$/'],
             'alamat'           => ['required', 'string'],
             'catatan'          => ['nullable', 'string'],
-            'metode_pembayaran'=> ['required', 'in:transfer,ewallet,cod'],
         ], [
             'nama_penerima.required'     => 'Nama penerima wajib diisi.',
             'no_hp.required'             => 'Nomor telepon wajib diisi.',
             'no_hp.regex'                => 'Format nomor telepon tidak valid.',
             'alamat.required'            => 'Alamat lengkap wajib diisi.',
             'metode_pembayaran.required' => 'Metode pembayaran wajib dipilih.',
-            'metode_pembayaran.in'       => 'Metode pembayaran tidak valid.',
         ]);
 
         $user = $request->user();
@@ -50,7 +51,6 @@ class CheckoutController extends Controller
         }
 
         $produkid = $keranjang->details->pluck('produk_id')->all();
-
         $ongkir = 15000;
 
         try {
@@ -105,11 +105,12 @@ class CheckoutController extends Controller
                     'no_hp'             => $validated['no_hp'],
                     'alamat'            => $validated['alamat'],
                     'catatan'           => $validated['catatan'] ?? null,
-                    'metode_pembayaran' => $validated['metode_pembayaran'],
+                    'metode_pembayaran' => 'qris',
                     'subtotal'          => $subtotal,
                     'ongkir'            => $ongkir,
                     'total'             => $subtotal + $ongkir,
                     'status'            => 'menunggu_pembayaran',
+                    'xendit_status'     => 'PENDING',
                 ]);
 
                 $pesanan->details()->createMany($detailData);
@@ -124,10 +125,24 @@ class CheckoutController extends Controller
                 return $pesanan;
             });
 
+            // Buat invoice Xendit (di luar transaction agar tidak rollback jika Xendit gagal)
+            $invoiceData = $this->xendit->createInvoice($pesanan->load('details.produk'));
+
+            $pesanan->update([
+                'xendit_invoice_id'  => $invoiceData['invoice_id'],
+                'xendit_invoice_url' => $invoiceData['invoice_url'],
+                'xendit_expires_at'  => $invoiceData['expires_at'],
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Pesanan berhasil dibuat.',
-                'data'    => $pesanan->load('details.produk'),
+                'data'        => [
+                    'id'          => $pesanan->id,
+                    'total'       => $pesanan->total,
+                    'invoice_url' => $invoiceData['invoice_url'],
+                    'expires_at'  => $invoiceData['expires_at'],
+                ],
             ], 201);
 
         } catch (\RuntimeException $e) {

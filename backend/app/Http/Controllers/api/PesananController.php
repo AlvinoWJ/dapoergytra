@@ -66,7 +66,10 @@ class PesananController extends Controller
             foreach ($pesanan->details as $detail) {
                 $detail->produk?->increment('stok', $detail->jumlah);
             }
-            $pesanan->update(['status' => 'dibatalkan']);
+            $pesanan->update([
+                'status'        => 'dibatalkan',
+                'xendit_status' => 'CANCELLED',
+            ]);
         });
 
         return response()->json([
@@ -95,6 +98,10 @@ class PesananController extends Controller
             'ongkir'             => (int) $pesanan->ongkir,
             'total'              => (int) $pesanan->total,
             'created_at'         => $pesanan->created_at,
+            'paid_at'            => $pesanan->paid_at,
+            'xendit_status'      => $pesanan->xendit_status,
+            'xendit_invoice_url' => $pesanan->xendit_invoice_url,
+            'xendit_expires_at'  => $pesanan->xendit_expires_at,
             'detail'             => $pesanan->details->map(function ($d) {
                 return [
                     'id'        => $d->id,

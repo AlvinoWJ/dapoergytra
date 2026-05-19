@@ -8,11 +8,14 @@ use App\Http\Controllers\Api\ProdukController;
 use App\Http\Controllers\Api\KeranjangController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\PesananController;
+use App\Http\Controllers\Api\XenditWebhookController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login',    [AuthController::class, 'login']);
 });
+
+Route::post('/xendit/webhook', [XenditWebhookController::class, 'handle']);
 
 Route::get('/kategori',              [KategoriController::class, 'index']);
 Route::get('/kategori/{kategori}',   [KategoriController::class, 'show']);

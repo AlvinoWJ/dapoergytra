@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -11,6 +11,8 @@ import {
   XCircle,
   Truck,
   RefreshCw,
+  QrCode,
+  ExternalLink,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +50,11 @@ interface Order {
   ongkir: number;
   total: number;
   created_at: string;
+  paid_at?: string | null;
   detail: OrderItem[];
+  xendit_invoice_url?: string | null;
+  xendit_status?: string | null;
+  xendit_expires_at?: string | null;
 }
 
 type StatusConfig = {
@@ -85,11 +91,11 @@ const STATUS_MAP: Record<OrderStatus, StatusConfig> = {
   },
 };
 
-const PAYMENT_LABEL: Record<string, string> = {
-  transfer: "Transfer Bank",
-  ewallet: "E-Wallet",
-  cod: "COD (Bayar di Tempat)",
-};
+// const PAYMENT_LABEL: Record<string, string> = {
+//   transfer: "Transfer Bank",
+//   ewallet: "E-Wallet",
+//   cod: "COD (Bayar di Tempat)",
+// };
 
 function getStatusConfig(status: OrderStatus): StatusConfig {
   return (
@@ -109,6 +115,11 @@ function formatDate(dateString: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function isInvoiceActive(expiresAt?: string | null): boolean {
+  if (!expiresAt) return false;
+  return new Date(expiresAt) > new Date();
 }
 
 function OrderSkeleton() {
@@ -138,6 +149,7 @@ function OrderSkeleton() {
 
 export default function OrdersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { show } = useToast();
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -167,6 +179,16 @@ export default function OrdersPage() {
     setIsLoggedIn(true);
     fetchOrders();
   }, [router, fetchOrders]);
+
+  useEffect(() => {
+    const orderId = searchParams.get("order_id");
+    if (orderId) {
+      show(
+        "Pesanan Anda sedang diverifikasi. Status akan diperbarui otomatis.",
+        "info",
+      );
+    }
+  }, [searchParams, show]);
 
   const handleCancel = async (orderId: number) => {
     if (!confirm("Batalkan pesanan ini?")) return;
@@ -263,6 +285,9 @@ export default function OrdersPage() {
                 const cfg = getStatusConfig(order.status);
                 const StatusIcon = cfg.icon;
                 const canCancel = order.status === "menunggu_pembayaran";
+                const invoiceActive =
+                  order.status === "menunggu_pembayaran" &&
+                  isInvoiceActive(order.xendit_expires_at);
 
                 return (
                   <Card key={order.id}>
@@ -343,9 +368,9 @@ export default function OrdersPage() {
                           <p className="text-gray-500 mb-1">
                             Metode Pembayaran
                           </p>
-                          <p className="font-semibold">
-                            {PAYMENT_LABEL[order.metode_pembayaran] ??
-                              order.metode_pembayaran}
+                          <p className="font-semibold flex items-center gap-1">
+                            <QrCode className="h-3 w-3" />
+                            QRIS
                           </p>
                         </div>
                         <div>
@@ -390,43 +415,58 @@ export default function OrdersPage() {
                         </div>
                       </div>
 
-                      {order.status === "menunggu_pembayaran" &&
-                        order.metode_pembayaran === "transfer" && (
-                          <>
-                            <Separator className="my-4" />
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                              <h4 className="font-semibold text-sm mb-2">
-                                Informasi Pembayaran
-                              </h4>
-                              <p className="text-sm text-gray-700 mb-3">
-                                Silakan transfer ke salah satu rekening berikut:
-                              </p>
-                              <div className="space-y-2 text-sm">
-                                <div className="bg-white p-2 rounded border">
-                                  <p className="font-semibold">
-                                    BCA – 1234567890
-                                  </p>
-                                  <p className="text-gray-600">
-                                    a.n. dapoergytra
-                                  </p>
-                                </div>
-                                <div className="bg-white p-2 rounded border">
-                                  <p className="font-semibold">
-                                    Mandiri – 0987654321
-                                  </p>
-                                  <p className="text-gray-600">
-                                    a.n. dapoergytra
-                                  </p>
-                                </div>
+                      {invoiceActive && order.xendit_invoice_url && (
+                        <>
+                          <Separator className="my-4" />
+                          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                            <div className="flex items-start gap-3">
+                              <QrCode className="h-8 w-8 text-yellow-600 flex-shrink-0 mt-0.5" />
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-sm text-yellow-800 mb-1">
+                                  Pembayaran Belum Selesai
+                                </h4>
+                                <p className="text-xs text-yellow-700 mb-3">
+                                  Selesaikan pembayaran QRIS sebelum{" "}
+                                  {order.xendit_expires_at
+                                    ? formatDate(order.xendit_expires_at)
+                                    : "invoice kedaluwarsa"}
+                                  .
+                                </p>
+                                <a
+                                  href={order.xendit_invoice_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Button
+                                    size="sm"
+                                    className="bg-yellow-600 hover:bg-yellow-700 gap-1"
+                                  >
+                                    <ExternalLink className="h-3 w-3" />
+                                    Bayar Sekarang
+                                  </Button>
+                                </a>
                               </div>
-                              <p className="text-xs text-yellow-700 mt-3">
-                                Cantumkan nomor pesanan{" "}
-                                <strong>#{order.id}</strong> sebagai berita
-                                transfer.
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {order.status === "diproses" && order.paid_at && (
+                        <>
+                          <Separator className="my-4" />
+                          <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+                            <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                            <div>
+                              <p className="text-sm font-semibold text-green-800">
+                                Pembayaran Berhasil
+                              </p>
+                              <p className="text-xs text-green-700">
+                                Diterima pada {formatDate(order.paid_at)}
                               </p>
                             </div>
-                          </>
-                        )}
+                          </div>
+                        </>
+                      )}
 
                       {canCancel && (
                         <>
