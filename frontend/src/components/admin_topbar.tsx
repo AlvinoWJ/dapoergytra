@@ -1,120 +1,129 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { Bell, Search, User, Moon, Sun } from "lucide-react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Badge } from "../ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+import { useRouter } from "next/navigation";
+import { Bell, User, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface AdminTopBarProps {
   onLogout: () => void;
+  collapsed: boolean;
 }
 
-export function AdminTopBar({ onLogout }: AdminTopBarProps) {
+const PAGE_TITLES: Record<string, string> = {
+  "/admin/dashboard": "Dashboard",
+  "/admin/products": "Kelola Produk",
+  "/admin/orders": "Kelola Pesanan",
+  "/admin/users": "Data Pelanggan",
+  "/admin/sales": "Laporan Penjualan",
+};
+
+export function AdminTopBar({ onLogout, collapsed }: AdminTopBarProps) {
+  const router = useRouter();
+  const [pathname, setPathname] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [darkMode, setDarkMode] = useState(false);
-  const [notifications] = useState(3); // Mock notification count
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Update every minute
+    setPathname(window.location.pathname);
+  }, []);
 
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60_000);
     return () => clearInterval(timer);
   }, []);
 
-  const formatDate = () => {
-    return currentTime.toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
+  useEffect(() => {
+    const close = () => setUserMenuOpen(false);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, []);
 
-  const formatTime = () => {
-    return currentTime.toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const pageTitle = PAGE_TITLES[pathname] ?? "Admin Panel";
+
+  const formattedDate = currentTime.toLocaleDateString("id-ID", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+  const formattedTime = currentTime.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
-    <div className="h-16 bg-white border-b sticky top-0 z-30 flex items-center justify-between px-6">
-      {/* Search Bar */}
-      <div className="flex-1 max-w-xl">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Cari pesanan, produk, atau pelanggan..."
-            className="pl-10 bg-gray-50 border-gray-200"
-          />
-        </div>
+    <header
+      className={`
+        fixed top-0 right-0 z-30 h-16 bg-white border-b border-gray-100
+        flex items-center justify-between px-6 transition-all duration-300
+        ${collapsed ? "left-[72px]" : "left-64"}
+      `}
+    >
+      {/* Left: Page title */}
+      <div>
+        <h1 className="text-base font-semibold text-gray-900">{pageTitle}</h1>
+        <p className="text-xs text-gray-400 hidden sm:block">
+          {formattedDate} · {formattedTime}
+        </p>
       </div>
 
-      {/* Right Section */}
-      <div className="flex items-center gap-4">
-        {/* Date & Time */}
-        <div className="hidden lg:flex flex-col items-end text-sm">
-          <span className="font-medium text-gray-700">{formatTime()}</span>
-          <span className="text-xs text-gray-500">{formatDate()}</span>
-        </div>
-
-        {/* Dark Mode Toggle */}
+      {/* Right: Actions */}
+      <div className="flex items-center gap-1">
+        {/* Notifications (placeholder) */}
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setDarkMode(!darkMode)}
-          className="relative"
+          className="h-9 w-9 relative text-gray-500 hover:text-gray-800"
         >
-          {darkMode ? (
-            <Sun className="h-5 w-5" />
-          ) : (
-            <Moon className="h-5 w-5" />
-          )}
+          <Bell className="h-[18px] w-[18px]" />
         </Button>
 
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {notifications > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-600 text-xs">
-              {notifications}
-            </Badge>
-          )}
-        </Button>
+        {/* User menu */}
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setUserMenuOpen((v) => !v);
+            }}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <div className="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+              <User className="h-[14px] w-[14px] text-red-700" />
+            </div>
+            <span className="text-sm font-medium text-gray-700 hidden sm:block">
+              Admin
+            </span>
+          </button>
 
-        {/* User Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                <User className="h-4 w-4 text-red-700" />
+          {userMenuOpen && (
+            <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <p className="text-xs font-semibold text-gray-700">Admin</p>
+                <p className="text-xs text-gray-400 truncate">
+                  admin@dapoergytra.com
+                </p>
               </div>
-              <div className="hidden md:flex flex-col items-start">
-                <span className="text-sm font-medium">Admin</span>
-                <span className="text-xs text-gray-500">Administrator</span>
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Lihat Toko
+              </button>
+              <div className="border-t border-gray-100">
+                <button
+                  onClick={onLogout}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Logout
+                </button>
               </div>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Profil</DropdownMenuItem>
-            <DropdownMenuItem>Pengaturan</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onLogout} className="text-red-600">
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </header>
   );
 }

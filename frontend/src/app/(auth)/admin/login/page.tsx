@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface FormFields {
   login: string;
@@ -147,9 +148,6 @@ export default function AdminLoginPage() {
               <p className="text-2xl font-semibold text-slate-700">
                 Admin Login
               </p>
-              <p className="text-sm text-slate-500 mt-1">
-                Masuk ke panel administrator
-              </p>
             </div>
 
             {errors.general && (
@@ -232,17 +230,17 @@ export default function AdminLoginPage() {
                 onClick={handleSubmit}
                 className="mt-1 bg-red-600 hover:bg-red-700"
               >
-                Masuk sebagai Admin
+                Masuk
               </Button>
             </div>
 
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
+            <div className="mt-6 text-center text-sm text-slate-500">
+              <Link
+                href="/dashboard"
+                className="font-medium text-blue-700 transition-colors hover:text-blue-900 hover:underline"
               >
-                ← Kembali ke Toko
-              </button>
+                Kembali ke Toko
+              </Link>
             </div>
           </div>
         </div>
