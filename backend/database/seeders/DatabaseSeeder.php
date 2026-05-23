@@ -13,8 +13,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::factory()->create([
-            'username' => 'testuser',
-            'email' => 'test@example.com',
+            'username' => 'admin',
+            'email' => 'admin@dapoergytra.com',
+            'password' => 'Admin123',
+            'role' => 'admin',
         ]);
 
         $this->call(KategoriProdukSeeder::class);

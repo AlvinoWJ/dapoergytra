@@ -30,6 +30,37 @@ class PesananController extends Controller
     }
 
     /**
+     * GET /api/admin/pesanan
+     * Semua pesanan dari semua user — khusus admin.
+     */
+    public function adminIndex(Request $request): JsonResponse
+    {
+        $query = Pesanan::with(['details.produk', 'user']);
+
+        // Filter by status jika ada query param
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by tanggal
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $pesanan = $query
+            ->latest()
+            ->paginate($request->input('per_page', 20));
+
+        return response()->json([
+            'success' => true,
+            'data'    => $pesanan,
+        ]);
+    }
+
+    /**
      * GET /api/pesanan/{id}
      * Detail satu pesanan (harus milik user yang login)
      */
@@ -75,6 +106,39 @@ class PesananController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Pesanan berhasil dibatalkan.',
+            'data'    => $this->formatPesanan($pesanan->fresh('details.produk')),
+        ]);
+    }
+
+    /**
+     * PATCH /api/admin/pesanan/{id}/status
+     * Admin mengubah status pesanan.
+     */
+    public function updateStatus(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:menunggu_pembayaran,diproses,dikirim,selesai,dibatalkan'],
+        ]);
+
+        $pesanan = Pesanan::with('details.produk')->findOrFail($id);
+
+        // Jika admin membatalkan, kembalikan stok
+        if ($validated['status'] === 'dibatalkan' && $pesanan->status !== 'dibatalkan') {
+            DB::transaction(function () use ($pesanan, $validated) {
+                foreach ($pesanan->details as $detail) {
+                    if ($detail->produk) {
+                        $detail->produk->increment('stok', $detail->jumlah);
+                    }
+                }
+                $pesanan->update(['status' => $validated['status']]);
+            });
+        } else {
+            $pesanan->update(['status' => $validated['status']]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status pesanan berhasil diperbarui.',
             'data'    => $this->formatPesanan($pesanan->fresh('details.produk')),
         ]);
     }

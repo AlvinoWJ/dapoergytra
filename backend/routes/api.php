@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\KeranjangController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\PesananController;
 use App\Http\Controllers\Api\XenditWebhookController;
+use App\Http\Controllers\Api\AdminUserController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -52,4 +53,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post  ('/produk',           [ProdukController::class, 'store']);
     Route::post  ('/produk/{produk}',  [ProdukController::class, 'update']);
     Route::delete('/produk/{produk}',  [ProdukController::class, 'destroy']);
+
+    Route::get('/pesanan', [PesananController::class, 'adminIndex']);
+    Route::patch('/pesanan/{id}/status', [PesananController::class, 'updateStatus']);
+
+    Route::get('/users', [AdminUserController::class, 'index']);
 });
