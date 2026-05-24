@@ -3,7 +3,8 @@ import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import Image from "next/image";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
+import { fotoUrl } from "@/lib/foto";
 
 export interface Kategori {
   id: number;
@@ -132,18 +133,12 @@ export function ProductCatalog({
                     onClick={() => onProductClick?.(produk)}
                   >
                     <div className="aspect-square relative overflow-hidden bg-gray-100">
-                      {produk.foto ? (
-                        <Image
-                          src={produk.foto}
-                          alt={produk.nama}
-                          fill
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">
-                          🎂
-                        </div>
-                      )}
+                      <ImageWithFallback
+                        src={fotoUrl(produk.foto)}
+                        alt={produk.nama}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+
                       {produk.stok === 0 && (
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                           <span className="text-white text-sm font-semibold bg-red-600 px-3 py-1 rounded-full">

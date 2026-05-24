@@ -12,7 +12,7 @@ class KategoriController extends Controller
 {
     public function index(): JsonResponse
     {
-        $kategori = Kategori::withCount('produk')->orderBy('nama')->get();
+        $kategori = Kategori::orderBy('nama')->get();
 
         return response()->json([
             'success' => true,

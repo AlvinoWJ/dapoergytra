@@ -6,13 +6,14 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { useEffect } from "react";
-import Image from "next/image";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { Kategori } from "./product_catalog";
+import { fotoUrl } from "@/lib/foto";
 
 interface Produk {
   id: number;
@@ -62,10 +63,9 @@ export function ProductDetailModal({
         <div className="grid md:grid-cols-2 gap-6">
           {/* Image */}
           <div className="aspect-square relative rounded-lg overflow-hidden">
-            <Image
-              src={Produk.foto}
+            <ImageWithFallback
+              src={fotoUrl(Produk.foto)}
               alt={Produk.nama}
-              fill
               className="w-full h-full object-cover"
             />
           </div>
