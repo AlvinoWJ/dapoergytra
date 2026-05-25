@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
+import { fotoUrl } from "@/lib/foto";
 import {
   Package,
   Clock,
@@ -290,14 +291,10 @@ function OrderDetailModal({
                 >
                   <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 relative bg-gray-200">
                     {item.foto ? (
-                      <Image
-                        src={item.foto}
+                      <ImageWithFallback
+                        src={fotoUrl(item.foto)}
                         alt={item.nama}
-                        fill
-                        className="object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/cake_hero.jpg";
-                        }}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-xl">
