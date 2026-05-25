@@ -107,19 +107,22 @@ export function ProductModal({
     if (!form.validate()) return;
 
     setState({ isLoading: true, generalError: null });
+
     try {
       const formData = new FormData();
+
       formData.append("nama", form.form.nama.trim());
       formData.append("harga", form.form.harga);
       formData.append("stok", form.form.stok);
       formData.append("kategori_id", form.form.kategoriId);
+
       if (form.form.deskripsi.trim())
         formData.append("deskripsi", form.form.deskripsi.trim());
+
       if (fileUpload.fotoFile) formData.append("foto", fileUpload.fotoFile);
 
       if (editProduct) {
-        formData.append("_method", "PUT");
-        await api.post(`/produk/${editProduct.id}`, formData, {
+        await api.put(`/produk/${editProduct.id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else {

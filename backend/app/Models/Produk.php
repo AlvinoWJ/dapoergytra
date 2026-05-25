@@ -27,6 +27,7 @@ class Produk extends Model
     protected $hidden = [
         'created_at',
         'updated_at',
+        'kategori_id',
     ];
 
     public function getFotoUrlAttribute(): ?string
