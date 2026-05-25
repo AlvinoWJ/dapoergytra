@@ -22,8 +22,8 @@ interface AdminSidebarProps {
 
 const menuItems = [
   { path: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/admin/product", label: "Produk", icon: Package },
-  { path: "/admin/orders", label: "Pesanan", icon: ShoppingCart },
+  { path: "/admin/produk", label: "Produk", icon: Package },
+  { path: "/admin/pesanan", label: "Pesanan", icon: ShoppingCart },
   { path: "/admin/users", label: "Pelanggan", icon: Users },
   { path: "/admin/sales", label: "Laporan", icon: TrendingUp },
 ];

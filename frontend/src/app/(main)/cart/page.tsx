@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Minus, Plus, X, ShoppingBag } from "lucide-react";
-import Image from "next/image";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
+import { fotoUrl } from "@/lib/foto";
 import { useCartContext } from "@/components/cart/cart_provider";
 import { useEffect, useState } from "react";
 
@@ -91,14 +92,10 @@ export default function CartPage() {
                 <CardContent className="p-6">
                   <div className="flex gap-4">
                     <div className="w-24 h-24 rounded-md overflow-hidden flex-shrink-0 relative">
-                      <Image
-                        src={item.image}
+                      <ImageWithFallback
+                        src={fotoUrl(item.image)}
                         alt={item.name}
-                        fill
-                        className="object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/cake_hero.jpg";
-                        }}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
                     <div className="flex-1 min-w-0">

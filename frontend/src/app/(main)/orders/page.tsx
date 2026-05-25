@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
+import { fotoUrl } from "@/lib/foto";
 import {
   ArrowLeft,
   Package,
@@ -162,7 +163,13 @@ export default function OrdersPage() {
       setLoading(true);
       const res = await api.get("/pesanan");
       if (res.data?.success) {
-        setOrders(res.data.data);
+        const raw = res.data.data;
+        const list: Order[] = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : [];
+        setOrders(list);
       }
     } catch {
     } finally {
@@ -188,7 +195,7 @@ export default function OrdersPage() {
         "info",
       );
     }
-  }, [searchParams, show]);
+  }, [searchParams]);
 
   const handleCancel = async (orderId: number) => {
     if (!confirm("Batalkan pesanan ini?")) return;
@@ -281,7 +288,7 @@ export default function OrdersPage() {
         <div className="space-y-4">
           {loading
             ? Array.from({ length: 3 }).map((_, i) => <OrderSkeleton key={i} />)
-            : orders.map((order) => {
+            : orders?.map((order) => {
                 const cfg = getStatusConfig(order.status);
                 const StatusIcon = cfg.icon;
                 const canCancel = order.status === "menunggu_pembayaran";
@@ -316,15 +323,10 @@ export default function OrdersPage() {
                           <div key={item.id} className="flex gap-3">
                             <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 relative bg-gray-100">
                               {item.foto ? (
-                                <Image
-                                  src={item.foto}
+                                <ImageWithFallback
+                                  src={fotoUrl(item.foto)}
                                   alt={item.nama}
-                                  fill
-                                  className="object-cover"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src =
-                                      "/cake_hero.jpg";
-                                  }}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-2xl">

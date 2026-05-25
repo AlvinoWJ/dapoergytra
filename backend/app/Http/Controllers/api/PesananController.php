@@ -17,6 +17,7 @@ class PesananController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+
         $pesanan = Pesanan::with(['details.produk'])
             ->where('user_id', $request->user()->id)
             ->latest()
@@ -37,12 +38,10 @@ class PesananController extends Controller
     {
         $query = Pesanan::with(['details.produk', 'user']);
 
-        // Filter by status jika ada query param
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter by tanggal
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
@@ -53,6 +52,8 @@ class PesananController extends Controller
         $pesanan = $query
             ->latest()
             ->paginate($request->input('per_page', 20));
+
+        $pesanan->through(fn($p) => $this->formatPesananAdmin($p));
 
         return response()->json([
             'success' => true,
@@ -177,5 +178,16 @@ class PesananController extends Controller
                 ];
             })->values(),
         ];
+    }
+
+    private function formatPesananAdmin(Pesanan $pesanan): array
+    {
+        $data = $this->formatPesanan($pesanan);
+        $data['user'] = $pesanan->user ? [
+            'id'       => $pesanan->user->id,
+            'username' => $pesanan->user->username,
+            'email'    => $pesanan->user->email,
+        ] : null;
+        return $data;
     }
 }

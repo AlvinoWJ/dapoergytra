@@ -42,10 +42,10 @@ class Produk extends Model
         return $this->belongsTo(Kategori::class, 'kategori_id');
     }
 
-    // public function detailPesanans(): HasMany
-    // {
-    //     return $this->hasMany(DetailPesanan::class, 'id_produk', 'id_produk');
-    // }
+    public function detailPesanan(): HasMany
+    {
+        return $this->hasMany(DetailPesanan::class, 'produk_id');
+    }
 
     // public function detailKeranjangs(): HasMany
     // {

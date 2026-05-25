@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
+import { fotoUrl } from "@/lib/foto";
 import { ArrowLeft, QrCode } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -344,15 +345,10 @@ export default function CheckoutPage() {
                   {items.map((item) => (
                     <div key={item.id} className="flex gap-3">
                       <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 relative">
-                        <Image
-                          src={item.image}
+                        <ImageWithFallback
+                          src={fotoUrl(item.image)}
                           alt={item.name}
-                          fill
-                          className="object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              "/cake_hero.jpg";
-                          }}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
