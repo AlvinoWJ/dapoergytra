@@ -14,17 +14,9 @@ class XenditWebhookController extends Controller
 {
     public function __construct(private XenditService $xendit) {}
 
-    /**
-     * POST /api/xendit/webhook
-     *
-     * Xendit mengirim notifikasi ketika invoice dibayar, expired, dll.
-     * Referensi: https://developers.xendit.co/api-reference/#invoice-callback
-     */
     public function handle(Request $request): JsonResponse
     {
-        // 1. Verifikasi callback token
         $callbackToken = $request->header('x-callback-token');
-
         if (! $this->xendit->verifyCallbackToken($callbackToken ?? '')) {
             Log::warning('Xendit webhook: token tidak valid', [
                 'received' => $callbackToken,
@@ -33,68 +25,75 @@ class XenditWebhookController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $payload = $request->all();
-        $xenditStatus = strtoupper($payload['status'] ?? '');
-        $invoiceId    = $payload['id'] ?? null;
-        $externalId   = $payload['external_id'] ?? null;
+        try {
+            $payload      = $request->all();
+            $xenditStatus = strtoupper($payload['status'] ?? '');
+            $invoiceId    = $payload['id'] ?? null;
+            $externalId   = $payload['external_id'] ?? null;
 
-        Log::info('Xendit webhook diterima', [
-            'invoice_id'  => $invoiceId,
-            'external_id' => $externalId,
-            'status'      => $xenditStatus,
-        ]);
-
-         if (! $invoiceId) {
-            return response()->json(['message' => 'Payload tidak lengkap'], 400);
-        }
-
-        $pesanan = Pesanan::where('xendit_invoice_id', $invoiceId)->first();
-
-        if (! $pesanan && $externalId) {
-            if (preg_match('/^DAPOER-(\d+)-\d+$/', $externalId, $matches)) {
-                $pesanan = Pesanan::find((int) $matches[1]);
-            }
-        }
-
-        if (! $pesanan) {
-            Log::warning('Xendit webhook: pesanan tidak ditemukan', [
+            Log::info('Xendit webhook diterima', [
                 'invoice_id'  => $invoiceId,
                 'external_id' => $externalId,
+                'status'      => $xenditStatus,
             ]);
-            // Return 200 agar Xendit tidak retry terus-menerus
-            return response()->json(['message' => 'Pesanan tidak ditemukan'], 200);
-        }
 
-        if ($pesanan->xendit_status === 'PAID') {
-            return response()->json(['message' => 'Sudah diproses'], 200);
-        }
-
-        DB::transaction(function () use ($pesanan, $xenditStatus, $payload) {
-            $update = [
-                'xendit_status'          => $xenditStatus,
-                'xendit_payment_method'  => $payload['payment_method'] ?? null,
-            ];
-
-            if ($xenditStatus === 'PAID') {
-                $update['status']  = 'diproses';
-                $update['paid_at'] = now();
-            } elseif ($xenditStatus === 'EXPIRED') {
-                // Kembalikan stok jika invoice expired
-                foreach ($pesanan->details as $detail) {
-                    $detail->produk?->increment('stok', $detail->jumlah);
-                }
-                $update['status'] = 'dibatalkan';
+            if (! $invoiceId) {
+                Log::warning('Xendit webhook: payload tidak memiliki invoice id');
+                return response()->json(['message' => 'OK'], 200);
             }
 
-            $pesanan->update($update);
-        });
+            $pesanan = Pesanan::where('xendit_invoice_id', $invoiceId)->first();
 
-        Log::info('Xendit webhook: pesanan diperbarui', [
-            'pesanan_id'    => $pesanan->id,
-            'xendit_status' => $xenditStatus,
-            'status_baru'   => $pesanan->fresh()->status,
-        ]);
+            if (! $pesanan && $externalId) {
+                if (preg_match('/^DAPOER-(\d+)-\d+$/', $externalId, $matches)) {
+                    $pesanan = Pesanan::find((int) $matches[1]);
+                }
+            }
 
-        return response()->json(['message' => 'OK'], 200);
+            if (! $pesanan) {
+                Log::warning('Xendit webhook: pesanan tidak ditemukan', [
+                    'invoice_id'  => $invoiceId,
+                    'external_id' => $externalId,
+                ]);
+                return response()->json(['message' => 'OK'], 200);
+            }
+
+            if ($pesanan->xendit_status === 'PAID') {
+                return response()->json(['message' => 'OK'], 200);
+            }
+
+            DB::transaction(function () use ($pesanan, $xenditStatus, $payload) {
+                $update = [
+                    'xendit_status'         => $xenditStatus,
+                    'xendit_payment_method' => $payload['payment_method'] ?? null,
+                ];
+
+                if ($xenditStatus === 'PAID') {
+                    $update['status']  = 'diproses';
+                    $update['paid_at'] = now();
+                } elseif ($xenditStatus === 'EXPIRED') {
+                    foreach ($pesanan->details as $detail) {
+                        $detail->produk?->increment('stok', $detail->jumlah);
+                    }
+                    $update['status'] = 'dibatalkan';
+                }
+
+                $pesanan->update($update);
+            });
+
+            Log::info('Xendit webhook: pesanan diperbarui', [
+                'pesanan_id'    => $pesanan->id,
+                'xendit_status' => $xenditStatus,
+            ]);
+
+            return response()->json(['message' => 'OK'], 200);
+
+        } catch (\Throwable $e) {
+            Log::error('Xendit webhook: exception tidak tertangani', [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+            return response()->json(['message' => 'OK'], 200);
+        }
     }
 }

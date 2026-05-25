@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 import { fotoUrl } from "@/lib/foto";
@@ -94,6 +94,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checked, setChecked] = useState(false);
+  const redirectedRef = useRef(false);
 
   const shippingCost = 15000;
   const total = totalPrice + shippingCost;
@@ -109,11 +110,12 @@ export default function CheckoutPage() {
   }, [router]);
 
   useEffect(() => {
-    if (checked && items.length === 0) {
-      show("Keranjang Anda kosong!", "warning");
+    if (!checked || !isLoggedIn) return;
+    if (items.length === 0 && !redirectedRef.current) {
+      redirectedRef.current = true;
       router.replace("/dashboard");
     }
-  }, [checked, items.length, router, show]);
+  }, [checked, isLoggedIn, items.length, router]);
 
   if (!checked || !isLoggedIn || items.length === 0) return null;
 

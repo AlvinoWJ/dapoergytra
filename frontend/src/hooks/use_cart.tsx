@@ -1,7 +1,7 @@
 // frontend/src/hooks/use_cart.tsx
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 
@@ -19,10 +19,11 @@ export function useCart() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const hasFetched = useRef(false);
+
   const isLoggedIn = () =>
     typeof window !== "undefined" && !!localStorage.getItem("token");
 
-  /** Muat keranjang dari server */
   const fetchCart = useCallback(async () => {
     if (!isLoggedIn()) return;
     try {
@@ -30,13 +31,14 @@ export function useCart() {
       const res = await api.get("/keranjang");
       if (res.data?.success) setItems(res.data.data);
     } catch {
-      // abaikan error (misal 401 sudah dihandle interceptor)
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
     fetchCart();
   }, [fetchCart]);
 
