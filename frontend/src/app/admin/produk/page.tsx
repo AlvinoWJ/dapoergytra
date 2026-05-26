@@ -29,6 +29,41 @@ interface PaginatedResponse {
   per_page: number;
 }
 
+type StatusConfig = {
+  label: string;
+  badgeClass: string;
+};
+
+type KategoriStatus = "Brownies" | "Tradisional" | "Cake" | "Tart";
+
+const STATUS_MAP: Record<KategoriStatus, StatusConfig> = {
+  Brownies: {
+    label: "Brownies",
+    badgeClass: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  },
+  Tradisional: {
+    label: "Tradisional",
+    badgeClass: "bg-purple-100 text-purple-800 border-purple-200",
+  },
+  Cake: {
+    label: "Cake",
+    badgeClass: "bg-pink-100 text-pink-800 border-pink-200",
+  },
+  Tart: {
+    label: "Tart",
+    badgeClass: "bg-orange-100 text-orange-800 border-orange-200",
+  },
+};
+
+function getStatusCfg(status: KategoriStatus): StatusConfig {
+  return (
+    STATUS_MAP[status] ?? {
+      label: status,
+      badgeClass: "bg-gray-100 text-gray-800 border-gray-200",
+    }
+  );
+}
+
 /* ── Skeleton ── */
 function ProductSkeleton() {
   return (
@@ -55,9 +90,12 @@ export default function AdminProductsPage() {
   const [kategoris, setKategoris] = useState<Kategori[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+
   const [selectedKategori, setSelectedKategori] = useState("");
+
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({
     current_page: 1,
@@ -221,9 +259,9 @@ export default function AdminProductsPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col ">
           {/* Search */}
-          <div className="flex flex-1 gap-2">
+          <div className="flex">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -248,19 +286,28 @@ export default function AdminProductsPage() {
               )}
             </div>
           </div>
-          {/* Filter kategori */}
-          <select
-            value={selectedKategori}
-            onChange={(e) => setSelectedKategori(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200 min-w-[160px]"
-          >
-            <option value="">Semua Kategori</option>
-            {kategoris.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.nama}
-              </option>
-            ))}
-          </select>
+        </div>
+
+        {/* Filter kategori */}
+        <div className="flex flex-wrap gap-2">
+          {kategoris.map((kat) => {
+            const cfg = getStatusCfg(kat.nama as KategoriStatus);
+
+            return (
+              <button
+                key={kat.id}
+                onClick={() => setSelectedKategori(String(kat.id))}
+                className={[
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+                  selectedKategori === String(kat.id)
+                    ? cfg.badgeClass + " border-current"
+                    : "bg-white text-gray-500 border-gray-200 hover:border-gray-400",
+                ].join(" ")}
+              >
+                {kat.nama}
+              </button>
+            );
+          })}
         </div>
 
         {/* Grid */}

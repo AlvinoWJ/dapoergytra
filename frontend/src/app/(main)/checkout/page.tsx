@@ -95,6 +95,7 @@ export default function CheckoutPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checked, setChecked] = useState(false);
   const redirectedRef = useRef(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const shippingCost = 15000;
   const total = totalPrice + shippingCost;
@@ -110,12 +111,11 @@ export default function CheckoutPage() {
   }, [router]);
 
   useEffect(() => {
-    if (!checked || !isLoggedIn) return;
-    if (items.length === 0 && !redirectedRef.current) {
-      redirectedRef.current = true;
+    if (checked && items.length === 0 && !isCheckingOut) {
+      show("Keranjang Anda kosong!", "warning");
       router.replace("/dashboard");
     }
-  }, [checked, isLoggedIn, items.length, router]);
+  }, [checked, items.length, isCheckingOut, router, show]);
 
   if (!checked || !isLoggedIn || items.length === 0) return null;
 
@@ -145,6 +145,7 @@ export default function CheckoutPage() {
       });
 
       if (res.data?.success) {
+        setIsCheckingOut(true);
         await clearCart();
         show("Pesanan dibuat! Mengarahkan ke halaman pembayaran...", "success");
 

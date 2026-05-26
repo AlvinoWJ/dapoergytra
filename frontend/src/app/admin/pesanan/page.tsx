@@ -3,77 +3,28 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
-import { fotoUrl } from "@/lib/foto";
 import {
   Package,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Truck,
   Search,
   Filter,
   RefreshCw,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
   QrCode,
+  X,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  OrderDetailModal,
+  Order,
+  OrderStatus,
+  getStatusCfg,
+  formatDate,
+} from "@/components/order_detail_modal";
 import api from "@/lib/api";
-
-/* ── Types ── */
-type OrderStatus =
-  | "menunggu_pembayaran"
-  | "diproses"
-  | "dikirim"
-  | "selesai"
-  | "dibatalkan";
-
-interface OrderItem {
-  id: number;
-  produk_id: number;
-  nama: string;
-  harga: number;
-  foto: string | null;
-  jumlah: number;
-}
-
-interface OrderUser {
-  id: number;
-  username: string;
-  email: string;
-}
-
-interface Order {
-  id: number;
-  status: OrderStatus;
-  status_label: string;
-  nama_penerima: string;
-  no_hp: string;
-  alamat: string;
-  catatan?: string | null;
-  metode_pembayaran: string;
-  subtotal: number;
-  ongkir: number;
-  total: number;
-  created_at: string;
-  paid_at?: string | null;
-  detail: OrderItem[];
-  user?: OrderUser;
-  xendit_invoice_url?: string | null;
-  xendit_status?: string | null;
-  xendit_expires_at?: string | null;
-}
 
 interface PaginationMeta {
   current_page: number;
@@ -81,41 +32,6 @@ interface PaginationMeta {
   total: number;
   per_page: number;
 }
-
-/* ── Status config ── */
-type StatusConfig = {
-  label: string;
-  badgeClass: string;
-  icon: React.ElementType;
-};
-
-const STATUS_MAP: Record<OrderStatus, StatusConfig> = {
-  menunggu_pembayaran: {
-    label: "Menunggu Pembayaran",
-    badgeClass: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    icon: Clock,
-  },
-  diproses: {
-    label: "Diproses",
-    badgeClass: "bg-purple-100 text-purple-800 border-purple-200",
-    icon: Package,
-  },
-  dikirim: {
-    label: "Dikirim",
-    badgeClass: "bg-indigo-100 text-indigo-800 border-indigo-200",
-    icon: Truck,
-  },
-  selesai: {
-    label: "Selesai",
-    badgeClass: "bg-green-100 text-green-800 border-green-200",
-    icon: CheckCircle,
-  },
-  dibatalkan: {
-    label: "Dibatalkan",
-    badgeClass: "bg-red-100 text-red-800 border-red-200",
-    icon: XCircle,
-  },
-};
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "all", label: "Semua Status" },
@@ -126,15 +42,9 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "dibatalkan", label: "Dibatalkan" },
 ];
 
-// Next status transitions
 const NEXT_STATUS: Partial<
   Record<OrderStatus, { status: OrderStatus; label: string; className: string }>
 > = {
-  menunggu_pembayaran: {
-    status: "diproses",
-    label: "Konfirmasi & Proses",
-    className: "bg-purple-600 hover:bg-purple-700 text-white",
-  },
   diproses: {
     status: "dikirim",
     label: "Kirim Pesanan",
@@ -146,26 +56,6 @@ const NEXT_STATUS: Partial<
     className: "bg-green-600 hover:bg-green-700 text-white",
   },
 };
-
-function getStatusCfg(status: OrderStatus): StatusConfig {
-  return (
-    STATUS_MAP[status] ?? {
-      label: status,
-      badgeClass: "bg-gray-100 text-gray-800 border-gray-200",
-      icon: Package,
-    }
-  );
-}
-
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 /* ── Skeleton ── */
 function OrderSkeleton() {
@@ -187,222 +77,6 @@ function OrderSkeleton() {
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-/* ── Detail Modal ── */
-function OrderDetailModal({
-  order,
-  open,
-  onClose,
-  onUpdateStatus,
-  updating,
-}: {
-  order: Order | null;
-  open: boolean;
-  onClose: () => void;
-  onUpdateStatus: (id: number, status: OrderStatus) => void;
-  updating: number | null;
-}) {
-  if (!order) return null;
-  const cfg = getStatusCfg(order.status);
-  const StatusIcon = cfg.icon;
-  const nextStep = NEXT_STATUS[order.status];
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Detail Pesanan #{order.id}</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {/* Status & info */}
-          <div className="flex flex-wrap gap-3 items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">
-                {formatDate(order.created_at)}
-              </p>
-              {order.paid_at && (
-                <p className="text-xs text-green-600 mt-0.5">
-                  Dibayar: {formatDate(order.paid_at)}
-                </p>
-              )}
-            </div>
-            <Badge
-              className={`${cfg.badgeClass} flex items-center gap-1 border`}
-            >
-              <StatusIcon className="h-3 w-3" />
-              {cfg.label}
-            </Badge>
-          </div>
-
-          <Separator />
-
-          {/* Customer */}
-          <div>
-            <h3 className="font-semibold mb-2 text-sm text-gray-700 uppercase tracking-wide">
-              Data Pelanggan
-            </h3>
-            <div className="bg-gray-50 rounded-xl p-4 space-y-1.5 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Nama</span>
-                <span className="font-medium">{order.nama_penerima}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Telepon</span>
-                <span className="font-medium">{order.no_hp}</span>
-              </div>
-              {order.user && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Akun</span>
-                  <span className="font-medium text-blue-600">
-                    {order.user.email}
-                  </span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-gray-500">Alamat</span>
-                <span className="font-medium text-right max-w-[60%]">
-                  {order.alamat}
-                </span>
-              </div>
-              {order.catatan && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Catatan</span>
-                  <span className="font-medium text-right max-w-[60%] italic">
-                    {order.catatan}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Items */}
-          <div>
-            <h3 className="font-semibold mb-2 text-sm text-gray-700 uppercase tracking-wide">
-              Item Pesanan
-            </h3>
-            <div className="space-y-2">
-              {order.detail.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex gap-3 p-3 bg-gray-50 rounded-xl"
-                >
-                  <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 relative bg-gray-200">
-                    {item.foto ? (
-                      <ImageWithFallback
-                        src={fotoUrl(item.foto)}
-                        alt={item.nama}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xl">
-                        🎂
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">{item.nama}</p>
-                    <p className="text-xs text-gray-500">Qty: {item.jumlah}</p>
-                    <p className="text-sm font-bold text-red-700">
-                      Rp {(item.harga * item.jumlah).toLocaleString("id-ID")}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Totals */}
-          <div className="space-y-1.5 text-sm">
-            <div className="flex justify-between text-gray-600">
-              <span>Subtotal</span>
-              <span>Rp {order.subtotal.toLocaleString("id-ID")}</span>
-            </div>
-            <div className="flex justify-between text-gray-600">
-              <span>Ongkir</span>
-              <span>Rp {order.ongkir.toLocaleString("id-ID")}</span>
-            </div>
-            <div className="flex justify-between font-bold text-base pt-1 border-t">
-              <span>Total</span>
-              <span className="text-red-700">
-                Rp {order.total.toLocaleString("id-ID")}
-              </span>
-            </div>
-          </div>
-
-          {/* Xendit invoice link */}
-          {order.xendit_invoice_url &&
-            order.status === "menunggu_pembayaran" && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <QrCode className="h-4 w-4 text-yellow-700" />
-                  <span className="text-sm text-yellow-800 font-medium">
-                    Invoice QRIS aktif
-                  </span>
-                </div>
-                <a
-                  href={order.xendit_invoice_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-yellow-700 underline flex items-center gap-1"
-                >
-                  Buka <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-            )}
-
-          {/* Actions */}
-          <div className="space-y-2 pt-1">
-            <p className="text-sm font-semibold text-gray-700">
-              Update Status:
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {(
-                Object.entries(NEXT_STATUS) as [
-                  OrderStatus,
-                  (typeof NEXT_STATUS)[OrderStatus],
-                ][]
-              ).map(([from, next]) => {
-                if (!next) return null;
-                return (
-                  <Button
-                    key={from}
-                    size="sm"
-                    variant="outline"
-                    disabled={updating === order.id}
-                    onClick={() => {
-                      onUpdateStatus(order.id, next.status);
-                      onClose();
-                    }}
-                    className={order.status === from ? next.className : ""}
-                  >
-                    {next.label}
-                  </Button>
-                );
-              })}
-              {order.status !== "dibatalkan" && order.status !== "selesai" && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={updating === order.id}
-                  onClick={() => {
-                    onUpdateStatus(order.id, "dibatalkan");
-                    onClose();
-                  }}
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  Batalkan
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -508,10 +182,13 @@ export default function AdminOrdersPage() {
     }
   }, [searchParams, orders]);
 
-  // Reset page on filter change
   useEffect(() => {
     setPage(1);
   }, [statusFilter, search]);
+
+  const handleSearch = () => {
+    setSearch(searchInput.trim());
+  };
 
   const handleUpdateStatus = async (
     orderId: number,
@@ -587,42 +264,31 @@ export default function AdminOrdersPage() {
         </div>
 
         {/* Filters */}
-        <div className="grid sm:grid-cols-2 gap-3">
-          <div className="flex gap-2">
+        <div className="flex flex-col">
+          <div className="flex ">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="Cari nama, telepon, email..."
                 className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200"
               />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchInput("");
+                    setSearch("");
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setSearch(searchInput)}
-              className="rounded-xl px-4"
-            >
-              Cari
-            </Button>
-          </div>
-
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200"
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
@@ -748,7 +414,7 @@ export default function AdminOrdersPage() {
                         Lihat Detail
                       </Button>
 
-                      {nextStep && (
+                      {nextStep && order.status !== "menunggu_pembayaran" && (
                         <Button
                           size="sm"
                           className={`flex-1 ${nextStep.className}`}
@@ -765,7 +431,8 @@ export default function AdminOrdersPage() {
                       )}
 
                       {order.status !== "dibatalkan" &&
-                        order.status !== "selesai" && (
+                        order.status !== "selesai" &&
+                        order.status !== "menunggu_pembayaran" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -823,8 +490,6 @@ export default function AdminOrdersPage() {
           setDetailOpen(false);
           setSelectedOrder(null);
         }}
-        onUpdateStatus={handleUpdateStatus}
-        updating={updating}
       />
     </div>
   );
