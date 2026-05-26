@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\PesananController;
 use App\Http\Controllers\Api\XenditWebhookController;
 use App\Http\Controllers\Api\AdminUserController;
+use App\Http\Controllers\Api\SalesReportController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -56,6 +57,13 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 
     Route::get('/admin/pesanan', [PesananController::class, 'adminIndex']);
     Route::patch('/admin/pesanan/{id}/status', [PesananController::class, 'updateStatus']);
+
+    Route::prefix('admin/sales')->group(function () {
+        Route::get('/summary',      [SalesReportController::class, 'summary']);
+        Route::get('/top-products', [SalesReportController::class, 'topProducts']);
+        Route::get('/daily',        [SalesReportController::class, 'dailySales']);
+        Route::get('/monthly',      [SalesReportController::class, 'monthlySales']);
+    });
 
     Route::get('/users', [AdminUserController::class, 'index']);
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Bell, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -12,21 +12,17 @@ interface AdminTopBarProps {
 
 const PAGE_TITLES: Record<string, string> = {
   "/admin/dashboard": "Dashboard",
-  "/admin/products": "Kelola Produk",
-  "/admin/orders": "Kelola Pesanan",
+  "/admin/produk": "Kelola Produk",
+  "/admin/pesanan": "Kelola Pesanan",
   "/admin/users": "Data Pelanggan",
   "/admin/sales": "Laporan Penjualan",
 };
 
 export function AdminTopBar({ onLogout, collapsed }: AdminTopBarProps) {
   const router = useRouter();
-  const [pathname, setPathname] = useState("");
+  const pathname = usePathname();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setPathname(window.location.pathname);
-  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60_000);
