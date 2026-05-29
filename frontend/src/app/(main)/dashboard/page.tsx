@@ -10,12 +10,6 @@ import { ProductDetailModal } from "@/components/product_detail";
 import { useCartContext } from "@/components/cart/cart_provider";
 import { useToast } from "@/components/toast/toastprovider";
 
-// interface User {
-//   id: number;
-//   name: string;
-//   email: string;
-// }
-
 export interface Kategori {
   id: number;
   nama: string;
@@ -37,17 +31,8 @@ export default function HomePage() {
   const { show } = useToast();
   const { addItem } = useCartContext();
 
-  // --- UI States ---
   const [selectedProduk, setSelectedProduk] = useState<Produk | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  // const [cartOpen, setCartOpen] = useState(false);
-  // const [loginModalOpen, setLoginModalOpen] = useState(false);
-  // const [activeCategory, setActiveCategory] = useState("Semua");
-
-  // --- Data States (Akan diisi dari API) ---
-  // const [Produk, setProduk] = useState<Produk[]>([]);
-  // const [user, setUser] = useState<User | null>(null);
-  // const [cartItems, setCartItems] = useState<any[]>([]);
 
   useEffect(() => {
     const target = sessionStorage.getItem("scrollTarget");
@@ -130,18 +115,6 @@ export default function HomePage() {
         Produk={selectedProduk}
         onAddToCart={handleAddToCartWithQuantity}
       />
-
-      {/* <Cart
-        open={cartOpen}
-        onClose={() => setCartOpen(false)}
-        items={items}
-        onUpdateQuantity={updateQuantity}
-        onRemoveItem={removeItem}
-        onCheckout={() => {
-          setCartOpen(false);
-          router.push("/cart");
-        }}
-      /> */}
     </div>
   );
 }

@@ -59,6 +59,82 @@ function SummarySkeleton() {
   );
 }
 
+function QuantityInput({
+  itemId,
+  quantity,
+  onUpdate,
+}: {
+  itemId: number;
+  quantity: number;
+  onUpdate: (id: number, qty: number) => void;
+}) {
+  const [inputValue, setInputValue] = useState(String(quantity));
+
+  // Keep in sync if quantity changes externally (e.g. optimistic update)
+  useEffect(() => {
+    setInputValue(String(quantity));
+  }, [quantity]);
+
+  const commit = (raw: string) => {
+    const parsed = parseInt(raw, 10);
+    const valid = isNaN(parsed) || parsed < 1 ? 1 : parsed;
+    setInputValue(String(valid));
+    if (valid !== quantity) onUpdate(itemId, valid);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        size="icon"
+        className="h-8 w-8"
+        disabled={quantity <= 1}
+        onClick={() => {
+          const next = Math.max(1, quantity - 1);
+          setInputValue(String(next));
+          onUpdate(itemId, next);
+        }}
+      >
+        <Minus className="h-4 w-4" />
+      </Button>
+
+      <input
+        type="number"
+        min="1"
+        value={inputValue}
+        onChange={(e) => {
+          setInputValue(e.target.value);
+          const parsed = parseInt(e.target.value, 10);
+          if (!isNaN(parsed) && parsed >= 1) onUpdate(itemId, parsed);
+        }}
+        onBlur={(e) => commit(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.currentTarget.blur();
+          }
+        }}
+        className="w-16 text-center rounded-xl border border-slate-200 bg-slate-50 py-1.5 text-sm font-semibold outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200
+          [appearance:textfield]
+          [&::-webkit-outer-spin-button]:appearance-none
+          [&::-webkit-inner-spin-button]:appearance-none"
+      />
+
+      <Button
+        variant="outline"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => {
+          const next = quantity + 1;
+          setInputValue(String(next));
+          onUpdate(itemId, next);
+        }}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export default function CartPage() {
   const router = useRouter();
   const {
@@ -89,7 +165,7 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <Button
@@ -163,37 +239,14 @@ export default function CartPage() {
                           </Button>
                         </div>
                         <p className="text-lg font-bold text-red-700 mb-4">
-                          Rp {item.price.toLocaleString("id-ID")}
+                          Rp {Number(item.price).toLocaleString("id-ID")}
                         </p>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() =>
-                                updateQuantity(
-                                  item.id,
-                                  Math.max(1, item.quantity - 1),
-                                )
-                              }
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <span className="w-12 text-center font-semibold">
-                              {item.quantity}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() =>
-                                updateQuantity(item.id, item.quantity + 1)
-                              }
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <QuantityInput
+                            itemId={item.id}
+                            quantity={item.quantity}
+                            onUpdate={updateQuantity}
+                          />
                           <div className="text-right">
                             <p className="text-sm text-gray-500">Subtotal</p>
                             <p className="font-bold text-lg">

@@ -157,7 +157,7 @@ export function ProductCatalog({
                       </p>
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-red-700">
-                          Rp {produk.harga.toLocaleString("id-ID")}
+                          Rp {Number(produk.harga).toLocaleString("id-ID")}
                         </span>
                         <Button
                           onClick={(e) => {

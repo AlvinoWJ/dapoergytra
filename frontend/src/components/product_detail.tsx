@@ -1,17 +1,10 @@
-import {
-  Dialog,
-  DialogHeader,
-  DialogClose,
-  DialogContent,
-  DialogTitle,
-} from "./ui/dialog";
-import { useEffect } from "react";
+import { Dialog, DialogHeader, DialogContent, DialogTitle } from "./ui/dialog";
+import { useEffect, useState } from "react";
 import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { Minus, Plus } from "lucide-react";
-import { useState } from "react";
 import { Kategori } from "./product_catalog";
 import { fotoUrl } from "@/lib/foto";
 
@@ -38,18 +31,48 @@ export function ProductDetailModal({
   onAddToCart,
 }: ProductDetailModalProps) {
   const [quantity, setQuantity] = useState(1);
+  // Separate display value so the field can be cleared while typing
+  const [inputValue, setInputValue] = useState("1");
 
   useEffect(() => {
     if (open) {
       setQuantity(1);
+      setInputValue("1");
     }
   }, [Produk?.id, open]);
 
   if (!Produk) return null;
 
+  const decrement = () => {
+    const next = Math.max(1, quantity - 1);
+    setQuantity(next);
+    setInputValue(String(next));
+  };
+
+  const increment = () => {
+    const next = quantity + 1;
+    setQuantity(next);
+    setInputValue(String(next));
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    setInputValue(raw);
+    const parsed = parseInt(raw, 10);
+    if (!isNaN(parsed) && parsed >= 1) setQuantity(parsed);
+  };
+
+  const handleInputBlur = () => {
+    const parsed = parseInt(inputValue, 10);
+    const valid = isNaN(parsed) || parsed < 1 ? 1 : parsed;
+    setQuantity(valid);
+    setInputValue(String(valid));
+  };
+
   const handleAddToCart = () => {
     onAddToCart(Produk, quantity);
     setQuantity(1);
+    setInputValue("1");
     onClose();
   };
 
@@ -78,7 +101,7 @@ export function ProductDetailModal({
               </Badge>
               <h2 className="text-2xl font-bold mb-2">{Produk.nama}</h2>
               <p className="text-3xl font-bold text-red-700">
-                Rp {Produk.harga.toLocaleString("id-ID")}
+                Rp {Number(Produk.harga).toLocaleString("id-ID")}
               </p>
             </div>
 
@@ -105,22 +128,29 @@ export function ProductDetailModal({
             {/* Quantity Selector */}
             <div>
               <h3 className="font-semibold mb-3">Jumlah</h3>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  onClick={decrement}
+                  disabled={quantity <= 1}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="w-12 text-center font-semibold text-lg">
-                  {quantity}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setQuantity(quantity + 1)}
-                >
+
+                <input
+                  type="number"
+                  min="1"
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  onBlur={handleInputBlur}
+                  className="w-16 text-center rounded-xl border border-slate-200 bg-slate-50 py-2 text-base font-semibold outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200
+                    [appearance:textfield]
+                    [&::-webkit-outer-spin-button]:appearance-none
+                    [&::-webkit-inner-spin-button]:appearance-none"
+                />
+
+                <Button variant="outline" size="icon" onClick={increment}>
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -131,12 +161,11 @@ export function ProductDetailModal({
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Subtotal</span>
                 <span className="text-xl font-bold text-red-700">
-                  Rp {(Produk.harga * quantity).toLocaleString("id-ID")}
+                  Rp {(Number(Produk.harga) * quantity).toLocaleString("id-ID")}
                 </span>
               </div>
             </div>
 
-            {/* Add to Cart Button */}
             <Button
               onClick={handleAddToCart}
               className="w-full bg-red-600 hover:bg-red-700"
