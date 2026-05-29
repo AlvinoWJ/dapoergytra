@@ -10,60 +10,82 @@ import { fotoUrl } from "@/lib/foto";
 import { useCartContext } from "@/components/cart/cart_provider";
 import { useEffect, useState } from "react";
 
+function CartItemSkeleton() {
+  return (
+    <Card className="animate-pulse">
+      <CardContent className="p-6">
+        <div className="flex gap-4">
+          <div className="w-24 h-24 rounded-md bg-gray-200 flex-shrink-0" />
+          <div className="flex-1 space-y-3 py-1">
+            <div className="h-5 w-48 bg-gray-200 rounded" />
+            <div className="h-4 w-24 bg-gray-200 rounded" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 bg-gray-200 rounded" />
+                <div className="h-5 w-8 bg-gray-200 rounded" />
+                <div className="h-8 w-8 bg-gray-200 rounded" />
+              </div>
+              <div className="h-5 w-28 bg-gray-200 rounded" />
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SummarySkeleton() {
+  return (
+    <Card className="animate-pulse">
+      <CardContent className="pt-6 space-y-4">
+        <div className="h-6 w-40 bg-gray-200 rounded" />
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex justify-between">
+              <div className="h-4 w-24 bg-gray-200 rounded" />
+              <div className="h-4 w-20 bg-gray-200 rounded" />
+            </div>
+          ))}
+        </div>
+        <Separator />
+        <div className="flex justify-between">
+          <div className="h-6 w-16 bg-gray-200 rounded" />
+          <div className="h-6 w-28 bg-gray-200 rounded" />
+        </div>
+        <div className="h-10 w-full bg-gray-200 rounded-md" />
+        <div className="h-10 w-full bg-gray-100 rounded-md" />
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function CartPage() {
   const router = useRouter();
-  const { items, updateQuantity, removeItem } = useCartContext();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [checked, setChecked] = useState(false);
+  const {
+    items,
+    updateQuantity,
+    removeItem,
+    loading: cartLoading,
+  } = useCartContext();
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       router.replace("/login");
-    } else {
-      setIsLoggedIn(true);
+      return;
     }
-    setChecked(true);
+    setReady(true);
   }, [router]);
 
-  if (!checked || !isLoggedIn) return null;
+  const isLoading = !ready || cartLoading;
 
   const total = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
+
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-
-  if (items.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/dashboard")}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Kembali
-          </Button>
-
-          <div className="text-center py-16">
-            <ShoppingBag className="h-24 w-24 text-gray-300 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Keranjang Kosong</h2>
-            <p className="text-gray-600 mb-6">
-              Belum ada produk di keranjang Anda
-            </p>
-            <Button
-              onClick={() => router.push("/dashboard")}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Mulai Belanja
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -84,130 +106,163 @@ export default function CartPage() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Kiri — Daftar Item */}
-          <div className="lg:col-span-2 space-y-4">
-            {items.map((item) => (
-              <Card key={item.id}>
-                <CardContent className="p-6">
-                  <div className="flex gap-4">
-                    <div className="w-24 h-24 rounded-md overflow-hidden flex-shrink-0 relative">
-                      <ImageWithFallback
-                        src={fotoUrl(item.image)}
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+        {isLoading && (
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <CartItemSkeleton key={i} />
+              ))}
+            </div>
+            <div className="lg:col-span-1">
+              <SummarySkeleton />
+            </div>
+          </div>
+        )}
+
+        {!isLoading && items.length === 0 && (
+          <div className="text-center py-16">
+            <ShoppingBag className="h-24 w-24 text-gray-300 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Keranjang Kosong</h2>
+            <p className="text-gray-600 mb-6">
+              Belum ada produk di keranjang Anda
+            </p>
+            <Button
+              onClick={() => router.push("/dashboard")}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Mulai Belanja
+            </Button>
+          </div>
+        )}
+
+        {!isLoading && items.length > 0 && (
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Left — item list */}
+            <div className="lg:col-span-2 space-y-4">
+              {items.map((item) => (
+                <Card key={item.id}>
+                  <CardContent className="p-6">
+                    <div className="flex gap-4">
+                      <div className="w-24 h-24 rounded-md overflow-hidden flex-shrink-0 relative">
+                        <ImageWithFallback
+                          src={fotoUrl(item.image)}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-semibold text-lg">{item.name}</h3>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 -mt-1"
+                            onClick={() => removeItem(item.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-lg font-bold text-red-700 mb-4">
+                          Rp {item.price.toLocaleString("id-ID")}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() =>
+                                updateQuantity(
+                                  item.id,
+                                  Math.max(1, item.quantity - 1),
+                                )
+                              }
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="w-12 text-center font-semibold">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() =>
+                                updateQuantity(item.id, item.quantity + 1)
+                              }
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-gray-500">Subtotal</p>
+                            <p className="font-bold text-lg">
+                              Rp{" "}
+                              {(item.price * item.quantity).toLocaleString(
+                                "id-ID",
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-semibold text-lg">{item.name}</h3>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 -mt-1"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <p className="text-lg font-bold text-red-700 mb-4">
-                        Rp {item.price.toLocaleString("id-ID")}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() =>
-                              updateQuantity(
-                                item.id,
-                                Math.max(1, item.quantity - 1),
-                              )
-                            }
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
-                          <span className="w-12 text-center font-semibold">
-                            {item.quantity}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-500">Subtotal</p>
-                          <p className="font-bold text-lg">
-                            Rp{" "}
-                            {(item.price * item.quantity).toLocaleString(
-                              "id-ID",
-                            )}
-                          </p>
-                        </div>
-                      </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Right — summary */}
+            <div className="lg:col-span-1">
+              <Card className="sticky top-24">
+                <CardContent className="pt-6">
+                  <h2 className="text-xl font-semibold mb-4">
+                    Ringkasan Belanja
+                  </h2>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Total Item</span>
+                      <span className="font-semibold">{totalItems} item</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Subtotal</span>
+                      <span>Rp {total.toLocaleString("id-ID")}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Ongkir</span>
+                      <span className="text-red-600">
+                        Dihitung saat checkout
+                      </span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>Total</span>
+                      <span className="text-red-700">
+                        Rp {total.toLocaleString("id-ID")}
+                      </span>
                     </div>
                   </div>
+
+                  <Button
+                    onClick={() => router.push("/checkout")}
+                    className="w-full bg-red-600 hover:bg-red-700 mt-6"
+                    size="lg"
+                  >
+                    Lanjut ke Checkout
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push("/dashboard")}
+                    className="w-full mt-3"
+                  >
+                    Lanjut Belanja
+                  </Button>
                 </CardContent>
               </Card>
-            ))}
+            </div>
           </div>
-
-          {/* Kanan — Ringkasan */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-24">
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-4">
-                  Ringkasan Belanja
-                </h2>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Item</span>
-                    <span className="font-semibold">{totalItems} item</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span>Rp {total.toLocaleString("id-ID")}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Ongkir</span>
-                    <span className="text-red-600">Dihitung saat checkout</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span className="text-red-700">
-                      Rp {total.toLocaleString("id-ID")}
-                    </span>
-                  </div>
-                </div>
-
-                <Button
-                  onClick={() => router.push("/checkout")}
-                  className="w-full bg-red-600 hover:bg-red-700 mt-6"
-                  size="lg"
-                >
-                  Lanjut ke Checkout
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => router.push("/dashboard")}
-                  className="w-full mt-3"
-                >
-                  Lanjut Belanja
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
