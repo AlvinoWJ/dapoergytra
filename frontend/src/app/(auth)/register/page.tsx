@@ -164,27 +164,6 @@ export default function RegisterPage() {
       {/* ── RIGHT PANEL ── */}
       <main className="flex flex-1 items-center justify-center bg-slate-50 px-6 py-12">
         <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <div className="mb-8 flex items-center gap-2 lg:hidden">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M8 5L11 6.75V10.25L8 12L5 10.25V6.75L8 5Z"
-                  fill="white"
-                />
-              </svg>
-            </span>
-            <span className="text-sm font-semibold tracking-wide text-slate-800">
-              Workly
-            </span>
-          </div>
-
           {/* Card */}
           <div className="rounded-2xl border border-slate-200 bg-white px-8 py-10 shadow-sm">
             <div className="mb-8">

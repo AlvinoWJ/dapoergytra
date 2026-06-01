@@ -5,6 +5,7 @@ import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 import { fotoUrl } from "@/lib/foto";
+import { useProducts } from "@/hooks/useProducts";
 
 export interface Kategori {
   id: number;
@@ -39,37 +40,12 @@ export function ProductCatalog({
   onAddToCart,
   onProductClick,
 }: ProductCatalogProps) {
-  const [produk, setProduk] = useState<Produk[]>([]);
-  const [selectedKategori, setSelectedKategori] = useState<string>("all");
-  const [loading, setLoading] = useState(true);
-  const [loadingProduk, setLoadingProduk] = useState(false);
+  const [selectedKategori, setSelectedKategori] = useState("all");
 
-  useEffect(() => {
-    async function fetchProduk() {
-      setLoadingProduk(true);
-      try {
-        const params = new URLSearchParams({ per_page: "20" });
-        if (selectedKategori !== "all") {
-          params.set("kategori_id", selectedKategori);
-        }
-
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/produk?${params}`,
-          { headers: { Accept: "application/json" } },
-        );
-        const json = await res.json();
-        if (json.success) {
-          setProduk(json.data.data);
-        }
-      } catch (err) {
-        console.error("Gagal memuat produk:", err);
-      } finally {
-        setLoadingProduk(false);
-        setLoading(false);
-      }
-    }
-    fetchProduk();
-  }, [selectedKategori]);
+  const { produk, isLoading } = useProducts({
+    kategoriId: selectedKategori,
+    perPage: 20,
+  });
 
   const skeletonCount = 8;
 
@@ -99,7 +75,7 @@ export function ProductCatalog({
           </TabsList>
 
           <TabsContent value={selectedKategori} className="mt-0">
-            {loading || loadingProduk ? (
+            {isLoading ? (
               <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {Array.from({ length: skeletonCount }).map((_, i) => (
                   <Card key={i} className="overflow-hidden animate-pulse">
