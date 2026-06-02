@@ -128,13 +128,20 @@ class ProdukController extends Controller
      */
     public function bestSellers(Request $request): JsonResponse
     {
-        $limit = $request->input('limit', 3);
+        $limit = min((int) $request->input('limit', 3), 10);
 
         $produk = Produk::with('kategori')
-            ->withCount('detailPesanans as total_terjual')
-            ->orderByDesc('total_terjual')
-            ->limit($limit)
-            ->get();
+        ->withCount([
+            'detailPesanan as total_terjual' => function ($query) {
+                $query->whereHas('pesanan', fn($q) =>
+                    $q->whereNotIn('status', ['dibatalkan'])
+                );
+            }
+        ])
+        ->where('stok', '>', 0)
+        ->orderByDesc('total_terjual')
+        ->limit($limit)
+        ->get();
 
         return response()->json([
             'success' => true,

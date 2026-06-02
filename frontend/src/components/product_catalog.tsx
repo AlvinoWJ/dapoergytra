@@ -5,22 +5,11 @@ import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 import { fotoUrl } from "@/lib/foto";
-import { useProducts } from "@/hooks/useProducts";
+import { useProducts, Produk } from "@/hooks/useProducts";
 
 export interface Kategori {
   id: number;
   nama: string;
-}
-
-interface Produk {
-  id: number;
-  nama: string;
-  harga: number;
-  foto: string;
-  kategori?: Kategori;
-  deskripsi: string;
-  stok: number;
-  kategori_id: number;
 }
 
 const kategori_tabs = [

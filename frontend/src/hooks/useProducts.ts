@@ -48,7 +48,7 @@ export function useProducts({
     ["/produk", params],
     fetcherWithParams,
     {
-      keepPreviousData: true, // tampilkan data lama saat filter berubah
+      keepPreviousData: true,
     },
   );
 

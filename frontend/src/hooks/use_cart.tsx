@@ -1,8 +1,8 @@
-// frontend/src/hooks/use_cart.tsx
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import api from "@/lib/api";
 
 export interface CartItem {
@@ -14,33 +14,25 @@ export interface CartItem {
   quantity: number;
 }
 
+const CART_KEY = "/keranjang";
+
+function isLoggedIn() {
+  return typeof window !== "undefined" && !!localStorage.getItem("token");
+}
+
 export function useCart() {
   const router = useRouter();
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  const hasFetched = useRef(false);
+  const { data, isLoading, mutate } = useSWR<{
+    success: boolean;
+    data: CartItem[];
+  }>(
+    isLoggedIn() ? CART_KEY : null, // null = tidak fetch jika belum login
+    (url: string) => api.get(url).then((r) => r.data),
+    { revalidateOnFocus: false },
+  );
 
-  const isLoggedIn = () =>
-    typeof window !== "undefined" && !!localStorage.getItem("token");
-
-  const fetchCart = useCallback(async () => {
-    if (!isLoggedIn()) return;
-    try {
-      setLoading(true);
-      const res = await api.get("/keranjang");
-      if (res.data?.success) setItems(res.data.data);
-    } catch {
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
-    fetchCart();
-  }, [fetchCart]);
+  const items: CartItem[] = data?.data ?? [];
 
   const addItem = useCallback(
     async (
@@ -52,64 +44,81 @@ export function useCart() {
         return false;
       }
       try {
-        const res = await api.post("/keranjang", {
+        await api.post("/keranjang", {
           produk_id: product.id,
           jumlah: quantity,
         });
-        if (res.data?.success) {
-          await fetchCart();
-        }
+        await mutate();
         return true;
       } catch {
         return false;
       }
     },
-    [router, fetchCart],
+    [router, mutate],
   );
 
   const updateQuantity = useCallback(
     async (id: number, quantity: number) => {
       const item = items.find((i) => i.id === id);
       if (!item?.detail_id) return;
+
+      await mutate(
+        {
+          success: true,
+          data: items.map((i) =>
+            i.id === id ? { ...i, quantity: Math.max(1, quantity) } : i,
+          ),
+        },
+        false,
+      );
+
       try {
         await api.patch(`/keranjang/${item.detail_id}`, {
           jumlah: Math.max(1, quantity),
         });
-        setItems((prev) =>
-          prev.map((i) =>
-            i.id === id ? { ...i, quantity: Math.max(1, quantity) } : i,
-          ),
-        );
-      } catch {}
+      } catch {
+        await mutate();
+      }
     },
-    [items],
+    [items, mutate],
   );
 
   const removeItem = useCallback(
     async (id: number) => {
       const item = items.find((i) => i.id === id);
       if (!item?.detail_id) return;
+
+      await mutate(
+        { success: true, data: items.filter((i) => i.id !== id) },
+        false,
+      );
+
       try {
         await api.delete(`/keranjang/${item.detail_id}`);
-        setItems((prev) => prev.filter((i) => i.id !== id));
-      } catch {}
+      } catch {
+        await mutate();
+      }
     },
-    [items],
+    [items, mutate],
   );
 
   const clearCart = useCallback(async () => {
+    await mutate({ success: true, data: [] }, false);
     try {
       await api.delete("/keranjang/clear");
-      setItems([]);
-    } catch {}
-  }, []);
+    } catch {
+      await mutate();
+    }
+  }, [mutate]);
+
+  const fetchCart = useCallback(() => mutate(), [mutate]);
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   return {
     items,
-    loading,
+    loading: isLoading,
     totalItems,
     totalPrice,
     addItem,

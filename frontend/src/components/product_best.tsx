@@ -3,42 +3,17 @@ import Image from "next/image";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { useBestSellers } from "@/hooks/useProducts";
+import { fotoUrl } from "@/lib/foto";
 
 interface Product {
   id: number;
   nama: string;
   harga: number;
   foto: string;
-  rating: number;
-  sold: number;
+  rating?: number;
+  sold?: number;
 }
-
-const bestProducts: Product[] = [
-  {
-    id: 1,
-    nama: "Brownies Coklat Premium",
-    harga: 75000,
-    foto: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=400&fit=crop",
-    rating: 4.9,
-    sold: 523,
-  },
-  {
-    id: 2,
-    nama: "Kue Lapis Legit",
-    harga: 120000,
-    foto: "https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=400&h=400&fit=crop",
-    rating: 4.8,
-    sold: 412,
-  },
-  {
-    id: 3,
-    nama: "Red Velvet Cake",
-    harga: 95000,
-    foto: "https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=400&h=400&fit=crop",
-    rating: 4.9,
-    sold: 389,
-  },
-];
 
 interface BestProductsProps {
   onAddToCart: (product: Product) => void;
@@ -49,6 +24,8 @@ export function BestProducts({
   onAddToCart,
   onProductClick,
 }: BestProductsProps) {
+  const { produk, isLoading } = useBestSellers(3);
+
   return (
     <section id="best-products" className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -64,49 +41,67 @@ export function BestProducts({
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {bestProducts.map((produk) => (
-            <Card
-              key={produk.id}
-              onClick={() => onProductClick?.(produk)}
-              className="overflow-hidden hover:shadow-xl transition-shadow"
-            >
-              <div className="aspect-square relative overflow-hidden">
-                <Image
-                  src={produk.foto}
-                  alt={produk.nama}
-                  fill
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                />
-                <Badge className="absolute top-4 right-4 bg-red-600">
-                  <Star className="h-3 w-3 fill-white mr-1" />
-                  {produk.rating}
-                </Badge>
-              </div>
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-2">{produk.nama}</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  {produk.sold} terjual
-                </p>
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold text-red-700">
-                    Rp {produk.harga.toLocaleString("id-ID")}
-                  </span>
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddToCart(produk);
-                    }}
-                    size="sm"
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    + Keranjang
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid md:grid-cols-3 gap-8">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="overflow-hidden animate-pulse">
+                <div className="aspect-square bg-gray-200" />
+                <CardContent className="p-6 space-y-3">
+                  <div className="h-5 w-3/4 bg-gray-200 rounded" />
+                  <div className="h-4 w-1/2 bg-gray-100 rounded" />
+                  <div className="flex justify-between pt-1">
+                    <div className="h-6 w-24 bg-gray-200 rounded" />
+                    <div className="h-8 w-28 bg-gray-200 rounded" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-8">
+            {produk.map((p) => {
+              const foto = fotoUrl(p.foto) ?? p.foto;
+              return (
+                <Card
+                  key={p.id}
+                  onClick={() => onProductClick?.(p)}
+                  className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
+                >
+                  <div className="aspect-square relative overflow-hidden">
+                    <Image
+                      src={foto}
+                      alt={p.nama}
+                      fill
+                      className="object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                    <Badge className="absolute top-4 right-4 bg-red-600">
+                      <Star className="h-3 w-3 fill-white mr-1" />
+                      Terlaris
+                    </Badge>
+                  </div>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg mb-2">{p.nama}</h3>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xl font-bold text-red-700">
+                        Rp {Number(p.harga).toLocaleString("id-ID")}
+                      </span>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddToCart(p);
+                        }}
+                        size="sm"
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        + Keranjang
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
