@@ -9,55 +9,7 @@ import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 import { fotoUrl } from "@/lib/foto";
 import { useCartContext } from "@/components/cart/cart_provider";
 import { useEffect, useState } from "react";
-
-function CartItemSkeleton() {
-  return (
-    <Card className="animate-pulse">
-      <CardContent className="p-6">
-        <div className="flex gap-4">
-          <div className="w-24 h-24 rounded-md bg-gray-200 flex-shrink-0" />
-          <div className="flex-1 space-y-3 py-1">
-            <div className="h-5 w-48 bg-gray-200 rounded" />
-            <div className="h-4 w-24 bg-gray-200 rounded" />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-gray-200 rounded" />
-                <div className="h-5 w-8 bg-gray-200 rounded" />
-                <div className="h-8 w-8 bg-gray-200 rounded" />
-              </div>
-              <div className="h-5 w-28 bg-gray-200 rounded" />
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function SummarySkeleton() {
-  return (
-    <Card className="animate-pulse">
-      <CardContent className="pt-6 space-y-4">
-        <div className="h-6 w-40 bg-gray-200 rounded" />
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex justify-between">
-              <div className="h-4 w-24 bg-gray-200 rounded" />
-              <div className="h-4 w-20 bg-gray-200 rounded" />
-            </div>
-          ))}
-        </div>
-        <Separator />
-        <div className="flex justify-between">
-          <div className="h-6 w-16 bg-gray-200 rounded" />
-          <div className="h-6 w-28 bg-gray-200 rounded" />
-        </div>
-        <div className="h-10 w-full bg-gray-200 rounded-md" />
-        <div className="h-10 w-full bg-gray-100 rounded-md" />
-      </CardContent>
-    </Card>
-  );
-}
+import { CartItemSkeleton, CartSummarySkeleton } from "@/components/skleton";
 
 function QuantityInput({
   itemId,
@@ -190,7 +142,7 @@ export default function CartPage() {
               ))}
             </div>
             <div className="lg:col-span-1">
-              <SummarySkeleton />
+              <CartSummarySkeleton />
             </div>
           </div>
         )}
