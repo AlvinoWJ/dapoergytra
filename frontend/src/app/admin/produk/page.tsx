@@ -20,6 +20,8 @@ import api from "@/lib/api";
 import { ProductModal, Produk, Kategori } from "@/components/product_modal";
 import { fotoUrl } from "@/lib/foto";
 import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
+import { useConfirmModal } from "@/hooks/useConfirmationModal";
+import ConfirmationModal from "@/components/confirmation_modal";
 
 interface PaginatedResponse {
   data: Produk[];
@@ -93,7 +95,6 @@ export default function AdminProductsPage() {
 
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
-
   const [selectedKategori, setSelectedKategori] = useState("");
 
   const [page, setPage] = useState(1);
@@ -102,13 +103,22 @@ export default function AdminProductsPage() {
     last_page: 1,
     total: 0,
   });
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Produk | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+
   const [toast, setToast] = useState<{
     msg: string;
     type: "success" | "error";
   } | null>(null);
+
+  const {
+    modal,
+    loading: confirmLoading,
+    confirm,
+    close,
+    handleConfirm,
+  } = useConfirmModal();
 
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type });
@@ -175,7 +185,6 @@ export default function AdminProductsPage() {
     fetchProduk();
   }, [fetchProduk]);
 
-  // Reset page on filter change
   useEffect(() => {
     setPage(1);
   }, [search, selectedKategori]);
@@ -184,21 +193,19 @@ export default function AdminProductsPage() {
     setSearch(searchInput.trim());
   };
 
-  const handleDelete = async (id: number, nama: string) => {
-    if (!confirm(`Hapus produk "${nama}"?`)) return;
-    setDeletingId(id);
-    try {
-      await api.delete(`/produk/${id}`);
-      showToast("Produk berhasil dihapus.");
-      fetchProduk(true);
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Gagal menghapus produk.";
-      showToast(msg, "error");
-    } finally {
-      setDeletingId(null);
-    }
+  const handleDelete = (id: number, nama: string) => {
+    confirm({
+      title: "Hapus Produk",
+      message: "Produk yang dihapus tidak dapat dikembalikan. Lanjutkan?",
+      detail: nama,
+      type: "danger",
+      confirmText: "Ya, Hapus",
+      onConfirm: async () => {
+        await api.delete(`/produk/${id}`);
+        showToast("Produk berhasil dihapus.");
+        fetchProduk(true);
+      },
+    });
   };
 
   const openAdd = () => {
@@ -222,7 +229,6 @@ export default function AdminProductsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Toast */}
       {toast && (
         <div
           className={[
@@ -243,7 +249,7 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Page heading */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -391,13 +397,8 @@ export default function AdminProductsPage() {
                         size="sm"
                         className="flex-1 h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
                         onClick={() => handleDelete(p.id, p.nama)}
-                        disabled={deletingId === p.id}
                       >
-                        {deletingId === p.id ? (
-                          <span className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" />
-                        ) : (
-                          <Trash2 className="h-3 w-3 mr-1" />
-                        )}
+                        <Trash2 className="h-3 w-3 mr-1" />
                         Hapus
                       </Button>
                     </div>
@@ -443,6 +444,18 @@ export default function AdminProductsPage() {
         onSuccess={onModalSuccess}
         editProduct={editProduct}
         kategoris={kategoris}
+      />
+
+      <ConfirmationModal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        message={modal.message}
+        detail={modal.detail}
+        type={modal.type}
+        confirmText={modal.confirmText}
+        loading={confirmLoading}
+        onConfirm={handleConfirm}
+        onCancel={close}
       />
     </div>
   );
