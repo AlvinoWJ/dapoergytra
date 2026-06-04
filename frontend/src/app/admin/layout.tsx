@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AdminSidebar } from "@/components/admin_sidebar";
-import { AdminTopBar } from "@/components/admin_topbar";
+import { AdminSidebar } from "@/components/admin/admin_sidebar";
+import { AdminTopBar } from "@/components/admin/admin_topbar";
 
 export default function AdminLayout({
   children,

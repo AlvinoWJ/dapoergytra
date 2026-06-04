@@ -25,6 +25,8 @@ import {
   formatDate,
 } from "@/components/order_detail_modal";
 import api from "@/lib/api";
+import { useConfirmModal } from "@/hooks/useConfirmationModal";
+import ConfirmationModal from "@/components/confirmation_modal";
 
 interface PaginationMeta {
   current_page: number;
@@ -96,21 +98,26 @@ export default function AdminOrdersPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [updating, setUpdating] = useState<number | null>(null);
 
-  // Filters
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
 
-  // Detail modal
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  // Toast
   const [toast, setToast] = useState<{
     msg: string;
     type: "success" | "error";
   } | null>(null);
+
+  const {
+    modal,
+    loading: confirmLoading,
+    confirm,
+    close,
+    handleConfirm,
+  } = useConfirmModal();
 
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type });
@@ -201,7 +208,7 @@ export default function AdminOrdersPage() {
       });
       if (res.data?.success) {
         showToast("Status pesanan berhasil diperbarui.");
-        // Update local state optimistically
+
         setOrders((prev) =>
           prev.map((o) =>
             o.id === orderId
@@ -241,7 +248,7 @@ export default function AdminOrdersPage() {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Heading */}
         <div className="flex items-center justify-between">
           <div>
@@ -490,6 +497,18 @@ export default function AdminOrdersPage() {
           setDetailOpen(false);
           setSelectedOrder(null);
         }}
+      />
+
+      <ConfirmationModal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        message={modal.message}
+        detail={modal.detail}
+        type={modal.type}
+        confirmText={modal.confirmText}
+        loading={confirmLoading}
+        onConfirm={handleConfirm}
+        onCancel={close}
       />
     </div>
   );
