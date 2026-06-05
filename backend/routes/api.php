@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\PesananController;
 use App\Http\Controllers\Api\XenditWebhookController;
 use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\SalesReportController;
+use App\Http\Controllers\Api\AdminNotificationController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -63,6 +64,13 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::get('/top-products', [SalesReportController::class, 'topProducts']);
         Route::get('/daily',        [SalesReportController::class, 'dailySales']);
         Route::get('/monthly',      [SalesReportController::class, 'monthlySales']);
+    });
+
+    Route::prefix('admin/notifications')->group(function () {
+        Route::get('/',           [AdminNotificationController::class, 'index']);
+        Route::get('/unread-count', [AdminNotificationController::class, 'unreadCount']);
+        Route::patch('/read-all', [AdminNotificationController::class, 'markAllRead']);
+        Route::patch('/{id}/read', [AdminNotificationController::class, 'markRead']);
     });
 
     Route::get('/users', [AdminUserController::class, 'index']);

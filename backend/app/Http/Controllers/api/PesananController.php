@@ -7,7 +7,7 @@ use App\Models\Pesanan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use App\Models\AdminNotification;
 
 class PesananController extends Controller
 {
@@ -102,6 +102,7 @@ class PesananController extends Controller
                 'status'        => 'dibatalkan',
                 'xendit_status' => 'CANCELLED',
             ]);
+            AdminNotification::createForOrder($pesanan, 'order_cancelled');
         });
 
         return response()->json([
@@ -132,6 +133,7 @@ class PesananController extends Controller
                     }
                 }
                 $pesanan->update(['status' => $validated['status']]);
+                AdminNotification::createForOrder($pesanan, 'order_cancelled');
             });
         } else {
             $pesanan->update(['status' => $validated['status']]);

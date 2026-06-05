@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\AdminNotification;
 
 class XenditWebhookController extends Controller
 {
@@ -79,6 +80,12 @@ class XenditWebhookController extends Controller
                 }
 
                 $pesanan->update($update);
+
+                if ($xenditStatus === 'PAID') {
+                    AdminNotification::createForOrder($pesanan, 'payment_success');
+                } elseif ($xenditStatus === 'EXPIRED') {
+                    AdminNotification::createForOrder($pesanan, 'order_cancelled');
+                }
             });
 
             Log::info('Xendit webhook: pesanan diperbarui', [

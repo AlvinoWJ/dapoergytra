@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Services\XenditService;
+use App\Models\AdminNotification;
 
 class CheckoutController extends Controller
 {
@@ -38,7 +39,6 @@ class CheckoutController extends Controller
 
         $user = $request->user();
 
-        // Ambil keranjang
         $keranjang = Keranjang::with('details')
             ->where('user_id', $user->id)
             ->first();
@@ -125,7 +125,6 @@ class CheckoutController extends Controller
                 return $pesanan;
             });
 
-            // Buat invoice Xendit (di luar transaction agar tidak rollback jika Xendit gagal)
             $invoiceData = $this->xendit->createInvoice($pesanan->load('details.produk'));
 
             $pesanan->update([
@@ -133,6 +132,8 @@ class CheckoutController extends Controller
                 'xendit_invoice_url' => $invoiceData['invoice_url'],
                 'xendit_expires_at'  => $invoiceData['expires_at'],
             ]);
+
+            AdminNotification::createForOrder($pesanan, 'order_created');
 
             return response()->json([
                 'success' => true,
