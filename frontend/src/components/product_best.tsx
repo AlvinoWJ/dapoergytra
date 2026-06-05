@@ -1,5 +1,5 @@
 import { Star } from "lucide-react";
-import Image from "next/image";
+import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -11,6 +11,7 @@ interface Product {
   nama: string;
   harga: number;
   foto: string;
+  deskripsi: string;
   rating?: number;
   sold?: number;
 }
@@ -68,11 +69,10 @@ export function BestProducts({
                   className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
                 >
                   <div className="aspect-square relative overflow-hidden">
-                    <Image
-                      src={foto}
+                    <ImageWithFallback
+                      src={fotoUrl(p.foto)}
                       alt={p.nama}
-                      fill
-                      className="object-cover hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                     />
                     <Badge className="absolute top-4 right-4 bg-red-600">
                       <Star className="h-3 w-3 fill-white mr-1" />

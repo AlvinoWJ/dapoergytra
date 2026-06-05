@@ -1,5 +1,5 @@
 import { Dialog, DialogHeader, DialogContent, DialogTitle } from "./ui/dialog";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { ImageWithFallback } from "@/components/ui/ImageWithFallback";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -31,148 +31,138 @@ export function ProductDetailModal({
   onAddToCart,
 }: ProductDetailModalProps) {
   const [quantity, setQuantity] = useState(1);
-  // Separate display value so the field can be cleared while typing
-  const [inputValue, setInputValue] = useState("1");
 
   useEffect(() => {
     if (open) {
       setQuantity(1);
-      setInputValue("1");
     }
   }, [Produk?.id, open]);
 
   if (!Produk) return null;
 
-  const decrement = () => {
-    const next = Math.max(1, quantity - 1);
-    setQuantity(next);
-    setInputValue(String(next));
-  };
-
-  const increment = () => {
-    const next = quantity + 1;
-    setQuantity(next);
-    setInputValue(String(next));
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    setInputValue(raw);
-    const parsed = parseInt(raw, 10);
-    if (!isNaN(parsed) && parsed >= 1) setQuantity(parsed);
-  };
-
-  const handleInputBlur = () => {
-    const parsed = parseInt(inputValue, 10);
-    const valid = isNaN(parsed) || parsed < 1 ? 1 : parsed;
-    setQuantity(valid);
-    setInputValue(String(valid));
-  };
-
   const handleAddToCart = () => {
     onAddToCart(Produk, quantity);
     setQuantity(1);
-    setInputValue("1");
     onClose();
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl">
-        <DialogHeader>
+      {/*
+        flex flex-col + max-h-[90vh] → modal tidak melampaui tinggi layar
+        overflow-hidden di DialogContent agar scroll dikelola di dalam
+      */}
+      <DialogContent className="sm:max-w-3xl flex flex-col max-h-[90dvh] overflow-hidden">
+        {/* Header — tidak ikut scroll */}
+        <DialogHeader className="shrink-0 pb-2">
           <DialogTitle>Detail Produk</DialogTitle>
         </DialogHeader>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Image */}
-          <div className="aspect-square relative rounded-lg overflow-hidden">
-            <ImageWithFallback
-              src={fotoUrl(Produk.foto)}
-              alt={Produk.nama}
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* Product Info */}
-          <div className="space-y-4">
-            <div>
-              <Badge variant="secondary" className="mb-2">
-                {Produk.kategori?.nama}
-              </Badge>
-              <h2 className="text-2xl font-bold mb-2">{Produk.nama}</h2>
-              <p className="text-3xl font-bold text-red-700">
-                Rp {Number(Produk.harga).toLocaleString("id-ID")}
-              </p>
+        {/*
+          Scrollable area:
+          - scrollbar-thin + scrollbar-thumb agar scrollbar terlihat di mobile & desktop
+            (membutuhkan plugin tailwind-scrollbar; jika belum ada, ganti dengan
+             [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full
+             [&::-webkit-scrollbar-thumb]:bg-gray-300)
+        */}
+        <div
+          className="overflow-y-auto flex-1
+          [&::-webkit-scrollbar]:w-1.5
+          [&::-webkit-scrollbar-thumb]:rounded-full
+          [&::-webkit-scrollbar-thumb]:bg-gray-300
+          [&::-webkit-scrollbar-track]:bg-transparent
+          pr-1"
+        >
+          {/* Mobile: single column | Desktop: 2 columns */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Gambar */}
+            <div className="aspect-square rounded-lg overflow-hidden self-start">
+              <ImageWithFallback
+                src={fotoUrl(Produk.foto)}
+                alt={Produk.nama}
+                className="w-full h-full object-cover"
+              />
             </div>
 
-            <Separator />
+            {/* Garis pemisah — hanya muncul di mobile (di bawah gambar) */}
+            <Separator className="md:hidden" />
 
-            <div>
-              <h3 className="font-semibold mb-2">Deskripsi</h3>
-              <p className="text-gray-600">{Produk.deskripsi}</p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-2">Informasi Produk</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Dibuat dengan bahan-bahan premium</li>
-                <li>• Diproduksi fresh setiap hari</li>
-                <li>• Kemasan aman dan higienis</li>
-                <li>• Tahan 3-5 hari di suhu ruang</li>
-                <li>• Dapat disimpan di kulkas hingga 2 minggu</li>
-              </ul>
-            </div>
-
-            <Separator />
-
-            {/* Quantity Selector */}
-            <div>
-              <h3 className="font-semibold mb-3">Jumlah</h3>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={decrement}
-                  disabled={quantity <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-
-                <input
-                  type="number"
-                  min="1"
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  onBlur={handleInputBlur}
-                  className="w-16 text-center rounded-xl border border-slate-200 bg-slate-50 py-2 text-base font-semibold outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200
-                    [appearance:textfield]
-                    [&::-webkit-outer-spin-button]:appearance-none
-                    [&::-webkit-inner-spin-button]:appearance-none"
-                />
-
-                <Button variant="outline" size="icon" onClick={increment}>
-                  <Plus className="h-4 w-4" />
-                </Button>
+            {/* Info Produk */}
+            <div className="space-y-4">
+              <div>
+                <Badge variant="secondary" className="mb-2">
+                  {Produk.kategori?.nama}
+                </Badge>
+                <h2 className="text-2xl font-bold mb-2">{Produk.nama}</h2>
+                <p className="text-3xl font-bold text-red-700">
+                  Rp {Number(Produk.harga).toLocaleString("id-ID")}
+                </p>
               </div>
-            </div>
 
-            {/* Subtotal */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Subtotal</span>
-                <span className="text-xl font-bold text-red-700">
-                  Rp {(Number(Produk.harga) * quantity).toLocaleString("id-ID")}
-                </span>
+              <Separator />
+
+              <div>
+                <h3 className="font-semibold mb-2">Deskripsi</h3>
+                <p className="text-gray-600">{Produk.deskripsi}</p>
               </div>
-            </div>
 
-            <Button
-              onClick={handleAddToCart}
-              className="w-full bg-red-600 hover:bg-red-700"
-              size="lg"
-            >
-              Tambah ke Keranjang
-            </Button>
+              <div>
+                <h3 className="font-semibold mb-2">Informasi Produk</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li>• Dibuat dengan bahan-bahan premium</li>
+                  <li>• Diproduksi fresh setiap hari</li>
+                  <li>• Kemasan aman dan higienis</li>
+                  <li>• Tahan 3-5 hari di suhu ruang</li>
+                  <li>• Dapat disimpan di kulkas hingga 2 minggu</li>
+                </ul>
+              </div>
+
+              <Separator />
+
+              {/* Quantity */}
+              <div>
+                <h3 className="font-semibold mb-3">Jumlah</h3>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="w-12 text-center font-semibold text-lg">
+                    {quantity}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(quantity + 1)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Subtotal */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">Subtotal</span>
+                  <span className="text-xl font-bold text-red-700">
+                    Rp{" "}
+                    {(Number(Produk.harga) * quantity).toLocaleString("id-ID")}
+                  </span>
+                </div>
+              </div>
+
+              {/* Tombol Tambah ke Keranjang */}
+              <Button
+                onClick={handleAddToCart}
+                className="w-full bg-red-600 hover:bg-red-700"
+                size="lg"
+              >
+                Tambah ke Keranjang
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
