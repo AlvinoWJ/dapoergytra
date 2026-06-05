@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Bell, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotificationPanel } from "@/components/admin/notification_panel";
 
 interface AdminTopBarProps {
   onLogout: () => void;
@@ -67,14 +68,7 @@ export function AdminTopBar({ onLogout, collapsed }: AdminTopBarProps) {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-1">
-        {/* Notifications (placeholder) */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 relative text-gray-500 hover:text-gray-800"
-        >
-          <Bell className="h-[18px] w-[18px]" />
-        </Button>
+        <NotificationPanel />
 
         {/* User menu */}
         <div className="relative">

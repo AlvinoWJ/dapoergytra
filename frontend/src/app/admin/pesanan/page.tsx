@@ -175,8 +175,15 @@ export default function AdminOrdersPage() {
       router.replace("/admin/login");
       return;
     }
+
+    const urlSearch = searchParams.get("search");
+    if (urlSearch && urlSearch.trim()) {
+      setSearchInput(urlSearch.trim());
+      setSearch(urlSearch.trim());
+    }
+
     fetchOrders();
-  }, [router, fetchOrders]);
+  }, [router]);
 
   useEffect(() => {
     const id = searchParams.get("id");
