@@ -81,11 +81,6 @@ class XenditWebhookController extends Controller
 
                 $pesanan->update($update);
 
-                if ($xenditStatus === 'PAID') {
-                    AdminNotification::createForOrder($pesanan, 'payment_success');
-                } elseif ($xenditStatus === 'EXPIRED') {
-                    AdminNotification::createForOrder($pesanan, 'order_cancelled');
-                }
             });
 
             Log::info('Xendit webhook: pesanan diperbarui', [

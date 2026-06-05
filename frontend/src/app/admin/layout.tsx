@@ -45,7 +45,7 @@ export default function AdminLayout({
       <main
         className={`
           pt-16 min-h-screen transition-all duration-300
-          ${sidebarCollapsed ? "pl-[56px]" : "pl-64"}
+          ${sidebarCollapsed ? "pl-[56px]" : "pl-56"}
         `}
       >
         <div>{children}</div>

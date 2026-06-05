@@ -65,18 +65,6 @@ export function ProductModal({
   });
   const [visible, setVisible] = useState(false);
 
-  /* Lock body scroll when modal is open */
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
   /* Animate in/out */
   useEffect(() => {
     if (open) {
@@ -183,14 +171,15 @@ export function ProductModal({
       <div
         className={[
           "relative z-10 w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden transition-all duration-300",
+          "max-h-[90vh] flex flex-col",
           visible ? "scale-100 translate-y-0" : "scale-95 translate-y-4",
         ].join(" ")}
       >
         {/* Top accent bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-red-500 via-rose-400 to-orange-400" />
+        <div className="h-1 w-full bg-gradient-to-r from-red-500 via-rose-400 to-orange-400 flex-shrink-0" />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b">
+        <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-50">
               {isEdit ? (
@@ -212,7 +201,7 @@ export function ProductModal({
         </div>
 
         {/* Body — no overflow-y-auto, no scrollbar */}
-        <div className="px-6 pt-5 pb-6">
+        <div className="px-6 pt-5 pb-6 overflow-y-auto max-h-[calc(90vh-120px)]">
           {/* Error banners */}
           {state.generalError && (
             <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5 mb-5">
@@ -349,7 +338,7 @@ export function ProductModal({
           {/* ── Kategori ── */}
           <div className="space-y-3 mb-5">
             <SelectField
-              label="Pilih Kategori"
+              label="Kategori"
               value={form.form.kategoriId}
               onChange={(e) => form.updateField("kategoriId", e.target.value)}
               options={kategoriOptions}

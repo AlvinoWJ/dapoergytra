@@ -441,22 +441,23 @@ export default function OrdersPage() {
                       </>
                     )}
 
-                    {order.status === "diproses" && order.paid_at && (
-                      <>
-                        <Separator className="my-4" />
-                        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-                          <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-                          <div>
-                            <p className="text-sm font-semibold text-green-800">
-                              Pembayaran Berhasil
-                            </p>
-                            <p className="text-xs text-green-700">
-                              Diterima pada {formatDate(order.paid_at)}
-                            </p>
+                    {order.status !== "menunggu_pembayaran" &&
+                      order.paid_at && (
+                        <>
+                          <Separator className="my-4" />
+                          <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+                            <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                            <div>
+                              <p className="text-sm font-semibold text-green-800">
+                                Pembayaran Berhasil
+                              </p>
+                              <p className="text-xs text-green-700">
+                                Diterima pada {formatDate(order.paid_at)}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </>
-                    )}
+                        </>
+                      )}
 
                     {canCancel && (
                       <>

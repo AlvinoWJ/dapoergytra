@@ -102,7 +102,6 @@ class PesananController extends Controller
                 'status'        => 'dibatalkan',
                 'xendit_status' => 'CANCELLED',
             ]);
-            AdminNotification::createForOrder($pesanan, 'order_cancelled');
         });
 
         return response()->json([
@@ -133,7 +132,6 @@ class PesananController extends Controller
                     }
                 }
                 $pesanan->update(['status' => $validated['status']]);
-                AdminNotification::createForOrder($pesanan, 'order_cancelled');
             });
         } else {
             $pesanan->update(['status' => $validated['status']]);

@@ -13,6 +13,10 @@ interface Produk {
   foto: string | null;
   stok: number;
   kategori_id: number;
+  kategori?: {
+    id: number;
+    nama: string;
+  };
 }
 
 export interface FormErrors {
@@ -55,7 +59,9 @@ export function useProductForm(
         harga: String(editProduct.harga),
         stok: String(editProduct.stok),
         deskripsi: editProduct.deskripsi ?? "",
-        kategoriId: String(editProduct.kategori_id),
+        kategoriId: String(
+          editProduct.kategori_id ?? editProduct.kategori?.id ?? "",
+        ),
       });
     } else {
       setForm({
