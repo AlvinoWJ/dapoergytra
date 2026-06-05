@@ -54,7 +54,7 @@ export function AdminTopBar({ onLogout, collapsed }: AdminTopBarProps) {
       className={`
         fixed top-0 right-0 z-30 h-16 bg-white border-b border-gray-100
         flex items-center justify-between px-6 transition-all duration-300
-        ${collapsed ? "left-[72px]" : "left-64"}
+        ${collapsed ? "left-[56px]" : "left-56"}
       `}
     >
       {/* Left: Page title */}

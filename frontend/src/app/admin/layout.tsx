@@ -30,9 +30,6 @@ export default function AdminLayout({
     router.push("/admin/login");
   };
 
-  // Keep sidebar collapse state in sync for topbar
-  // We pass collapsed down; sidebar manages its own internal state
-  // but exposes it via a callback here
   if (!ready) return null;
 
   return (
@@ -48,7 +45,7 @@ export default function AdminLayout({
       <main
         className={`
           pt-16 min-h-screen transition-all duration-300
-          ${sidebarCollapsed ? "pl-[72px]" : "pl-64"}
+          ${sidebarCollapsed ? "pl-[56px]" : "pl-64"}
         `}
       >
         <div>{children}</div>

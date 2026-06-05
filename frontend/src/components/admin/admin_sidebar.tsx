@@ -28,6 +28,82 @@ const menuItems = [
   { path: "/admin/sales", label: "Laporan", icon: TrendingUp },
 ];
 
+function NavItem({
+  icon: Icon,
+  label,
+  active,
+  collapsed,
+  onClick,
+  href,
+  danger,
+}: {
+  icon: React.ElementType;
+  label: string;
+  active?: boolean;
+  collapsed: boolean;
+  onClick?: () => void;
+  href?: string;
+  danger?: boolean;
+}) {
+  const inner = (
+    <div
+      className={`
+        group relative flex items-center rounded-lg cursor-pointer
+        transition-[background-color,color] duration-200
+        h-9
+        ${
+          active
+            ? "bg-red-600 text-white"
+            : danger
+              ? "text-red-500 hover:bg-red-50 hover:text-red-700"
+              : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+        }
+      `}
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-center w-9 h-9 flex-shrink-0">
+        <Icon className="h-[18px] w-[18px]" />
+      </div>
+
+      <div
+        className={`
+          overflow-hidden whitespace-nowrap
+          transition-[width,opacity] duration-300 ease-in-out
+          ${collapsed ? "w-0 opacity-0" : "w-36 opacity-100"}
+        `}
+      >
+        <span className="text-sm font-medium pr-3">{label}</span>
+      </div>
+
+      {collapsed && (
+        <div
+          className="
+            absolute left-full ml-2 px-2.5 py-1.5 z-50
+            bg-gray-900 text-white text-xs rounded-md
+            opacity-0 group-hover:opacity-100
+            pointer-events-none whitespace-nowrap shadow-lg
+            transition-opacity duration-150
+          "
+          role="tooltip"
+        >
+          {label}
+          <span
+            className="
+              absolute right-full top-1/2 -translate-y-1/2
+              border-4 border-transparent border-r-gray-900
+            "
+          />
+        </div>
+      )}
+    </div>
+  );
+
+  if (href) {
+    return <Link href={href}>{inner}</Link>;
+  }
+  return inner;
+}
+
 export function AdminSidebar({
   onLogout,
   onCollapseChange,
@@ -42,132 +118,82 @@ export function AdminSidebar({
     onCollapseChange?.(next);
   };
 
-  const isActive = (path: string) => pathname === path;
-
   return (
     <aside
       className={`
-        fixed top-0 left-0 z-40 h-full bg-white border-r border-gray-100 shadow-sm
-        flex flex-col transition-all duration-300 ease-in-out
-        ${collapsed ? "w-[72px]" : "w-64"}
+        fixed top-0 left-0 z-40 h-full
+        bg-white border-r border-gray-100
+        flex flex-col
+        transition-[width] duration-300 ease-in-out
+        overflow-hidden
+        ${collapsed ? "w-[56px]" : "w-56"}
       `}
     >
-      {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-100 flex-shrink-0">
-        {!collapsed ? (
-          <>
-            <Link href="/admin/dashboard">
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 bg-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-[10px] font-extrabold leading-none">
-                    DG
-                  </span>
-                </div>
-                <span className="font-extrabold text-base text-red-700 tracking-tight">
-                  dapoergytra
-                </span>
-              </div>
-            </Link>
-            <button
-              onClick={toggle}
-              className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-          </>
-        ) : (
-          <div className="flex flex-col items-center w-full gap-2">
-            <div className="w-7 h-7 bg-red-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-[10px] font-extrabold leading-none">
+      <div className="h-16 flex items-center flex-shrink-0 border-b border-gray-100">
+        <button
+          onClick={toggle}
+          aria-label={collapsed ? "Buka sidebar" : "Tutup sidebar"}
+          className="flex items-center justify-center w-9 h-9 ml-[calc((56px-36px)/2)]
+                     rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100
+                     transition-colors flex-shrink-0"
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </button>
+
+        <div
+          className={`
+            overflow-hidden whitespace-nowrap flex items-center gap-2
+            transition-[width,opacity] duration-300 ease-in-out
+            ${collapsed ? "w-0 opacity-0" : "w-40 opacity-100"}
+          `}
+        >
+          <Link
+            href="/admin/dashboard"
+            className="flex items-center gap-2 ml-1"
+          >
+            <div className="w-6 h-6 bg-red-600 rounded-md flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-[9px] font-extrabold leading-none">
                 DG
               </span>
             </div>
-            <button
-              onClick={toggle}
-              className="h-6 w-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
+            <span className="font-extrabold text-sm text-red-700 tracking-tight">
+              dapoergytra
+            </span>
+          </Link>
+        </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.path);
-          return (
-            <Link key={item.path} href={item.path}>
-              <div
-                className={`
-                  group relative flex items-center gap-3 px-3 py-2.5 rounded-lg
-                  transition-all duration-150 cursor-pointer
-                  ${collapsed ? "justify-center" : ""}
-                  ${
-                    active
-                      ? "bg-red-600 text-white shadow-sm"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  }
-                `}
-              >
-                <Icon
-                  className={`h-[18px] w-[18px] flex-shrink-0 ${active ? "text-white" : ""}`}
-                />
-                {!collapsed && (
-                  <span className="text-sm font-medium">{item.label}</span>
-                )}
-                {collapsed && (
-                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-50">
-                    {item.label}
-                    <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
-                  </div>
-                )}
-              </div>
-            </Link>
-          );
-        })}
+      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden">
+        {menuItems.map((item) => (
+          <NavItem
+            key={item.path}
+            icon={item.icon}
+            label={item.label}
+            active={pathname === item.path}
+            collapsed={collapsed}
+            href={item.path}
+          />
+        ))}
       </nav>
 
-      {/* Footer */}
-      <div className="px-3 py-3 border-t border-gray-100 space-y-0.5 flex-shrink-0">
-        <button
+      <div className="px-2 py-3 border-t border-gray-100 space-y-0.5 flex-shrink-0">
+        <NavItem
+          icon={Store}
+          label="Lihat toko"
+          collapsed={collapsed}
           onClick={() => router.push("/dashboard")}
-          className={`
-            group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
-            text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-all duration-150
-            ${collapsed ? "justify-center" : ""}
-          `}
-        >
-          <Store className="h-[18px] w-[18px] flex-shrink-0" />
-          {!collapsed && (
-            <span className="text-sm font-medium">Lihat Toko</span>
-          )}
-          {collapsed && (
-            <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-50">
-              Lihat Toko
-              <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
-            </div>
-          )}
-        </button>
-
-        <button
+        />
+        <NavItem
+          icon={LogOut}
+          label="Logout"
+          collapsed={collapsed}
           onClick={onLogout}
-          className={`
-            group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
-            text-red-500 hover:bg-red-50 hover:text-red-700 transition-all duration-150
-            ${collapsed ? "justify-center" : ""}
-          `}
-        >
-          <LogOut className="h-[18px] w-[18px] flex-shrink-0" />
-          {!collapsed && <span className="text-sm font-medium">Logout</span>}
-          {collapsed && (
-            <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-50">
-              Logout
-              <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
-            </div>
-          )}
-        </button>
+          danger
+        />
       </div>
     </aside>
   );
