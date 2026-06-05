@@ -94,6 +94,7 @@ export default function AdminOrdersPage() {
     total: 0,
     per_page: 20,
   });
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [updating, setUpdating] = useState<number | null>(null);
@@ -177,7 +178,6 @@ export default function AdminOrdersPage() {
     fetchOrders();
   }, [router, fetchOrders]);
 
-  // Auto-open order from URL param (?id=...)
   useEffect(() => {
     const id = searchParams.get("id");
     if (id && orders.length > 0) {
@@ -229,6 +229,19 @@ export default function AdminOrdersPage() {
     } finally {
       setUpdating(null);
     }
+  };
+
+  const handleCancelOrder = (order: Order) => {
+    confirm({
+      title: "Batalkan Pesanan",
+      message: `Pesanan atas nama "${order.nama_penerima}" akan dibatalkan dan stok semua produk di dalamnya akan dikembalikan.`,
+      detail: `Pesanan #${order.id} · Rp ${order.total.toLocaleString("id-ID")}`,
+      type: "warning",
+      confirmText: "Ya, Batalkan",
+      onConfirm: async () => {
+        await handleUpdateStatus(order.id, "dibatalkan");
+      },
+    });
   };
 
   return (
@@ -444,10 +457,8 @@ export default function AdminOrdersPage() {
                             size="sm"
                             variant="outline"
                             className="text-red-600 border-red-200 hover:bg-red-50"
-                            disabled={updating === order.id}
-                            onClick={() =>
-                              handleUpdateStatus(order.id, "dibatalkan")
-                            }
+                            disabled={updating === order.id || confirmLoading}
+                            onClick={() => handleCancelOrder(order)}
                           >
                             Batalkan
                           </Button>
